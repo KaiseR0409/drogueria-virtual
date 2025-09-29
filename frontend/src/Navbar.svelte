@@ -1,0 +1,104 @@
+<script>
+	import { onDestroy, onMount } from 'svelte';
+    let token = localStorage.getItem("token");
+    let tipoUsuario = localStorage.getItem("tipoUsuario");
+    let nombreUsuario = localStorage.getItem("nombreUsuario");
+    let idProveedor = localStorage.getItem("idProveedor");
+    console.log("Tipo Usuario en Navbar:", tipoUsuario);
+    console.log("Nombre Usuario en Navbar:", nombreUsuario);
+    console.log("ID Proveedor en Navbar:", idProveedor);
+    console.log("Token en Navbar:", token);
+
+    function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("tipoUsuario");
+        localStorage.removeItem("nombreUsuario");
+        localStorage.removeItem("idProveedor"); 
+
+        token = null;
+        
+    }
+    function onStorage(e){
+        if(e.key === 'token' || e.key === 'tipoUsuario' || e.key === 'nombreUsuario' || e.key === 'idProveedor'){
+            token = localStorage.getItem('token');
+            tipoUsuario = localStorage.getItem('tipoUsuario');
+            nombreUsuario = localStorage.getItem('nombreUsuario');
+            idProveedor = localStorage.getItem('idProveedor');
+        }
+    onMount(() => window.addEventListener('storage', onStorage));
+    onDestroy(() => window.removeEventListener('storage', onStorage));
+}
+</script>
+
+<header>
+    <nav class="navbar navbar-expand-lg navbar-custom bg-light fixed-top">
+        <div class="container-fluid">
+            <img
+                class="icono-nav"
+                src="../favico.png"
+                alt="drogueria virtual"
+            />
+            <a class="navbar-brand text-light" href="/">Droguería Virtual</a>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {#if token}
+                        {#if tipoUsuario === "Administrador"}
+                            <li class="nav-item">
+                                <a class="nav-link text-light" href="#/admin"
+                                    >Administra usuarios!
+                                </a>
+                            </li>
+                        {:else if tipoUsuario === "Proveedor"}
+                            <li class="nav-item">
+                                <a
+                                    class="nav-link text-light"
+                                    href="#/gestionar-productos">Gestionar Productos</a
+                                >
+                            </li>
+                        {/if}
+                    {/if}            
+                </ul>
+                <form class="d-flex">
+                    <input
+                        class="form-control me-2"
+                        type="search"
+                        placeholder="¿Buscas algo? ..."
+                        aria-label="Search"
+                    />
+                    <button class="btn btn-outline-light" type="submit"
+                        >Buscar</button
+                    >
+                </form>
+                {#if token}
+                    <!-- Si hay token -->
+                    <button on:click={logout} class="btn btn-logout">
+                        Cerrar Sesión
+                    </button>
+                {:else}
+                    <!-- Si no hay token -->
+                    <a href="#/login">
+                        <button type="button" class="btn btn-login">
+                            <img
+                                src="../avatar.png"
+                                alt="iniciarsesion-logo"
+                                class="iniciar-sesion-logo"
+                            />
+                            Iniciar sesión
+                        </button>
+                    </a>
+                {/if}
+            </div>
+        </div>
+    </nav>
+</header>
