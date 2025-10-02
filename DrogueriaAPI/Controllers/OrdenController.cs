@@ -1,0 +1,193 @@
+﻿using DrogueriaAPI.Models.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using DrogueriaAPI.Data;
+using DrogueriaAPI.Models;
+
+namespace DrogueriaAPI.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")] // <- tu endpoint será api/orden
+    
+    public class OrdenController : ControllerBase
+    {
+        private readonly DrogueriaDbContext _context;
+        //definir el endpoint
+        public OrdenController(DrogueriaDbContext context)
+        {
+            _context = context;
+        }
+
+
+        [HttpPost] //api/orden
+        public async Task<IActionResult> CrearOrden([FromBody] CrearOrdenRequest request)
+        {
+            if (request.Items == null || !request.Items.Any())
+                return BadRequest("La orden debe tener al menos un producto.");
+
+            var orden = new Orden
+            {
+                IdUsuario = request.IdUsuario,
+                IdProveedor = request.IdProveedor,
+                FechaOrden = DateTime.Now,
+                EstadoOrden = "Pendiente",
+                MontoTotal = request.MontoTotal,
+
+                // Factura
+                NumeroOrdenCompra = "OC-" + DateTime.Now.Ticks, //TEMPORAL: El cliente me deberá decir que es lo que quiere, si autogenerarlo o la api de pago lo trae
+                NumeroFactura = request.NumeroFactura,
+                TipoComprobante = request.TipoComprobante,
+                FechaFactura = request.FechaFactura,
+                MetodoPago = request.MetodoPago,
+                Moneda = request.Moneda,
+                Impuestos = request.Impuestos,
+                Descuento = request.Descuento
+            };
+
+            _context.Ordenes.Add(orden);
+            await _context.SaveChangesAsync();
+
+            foreach (var item in request.Items)
+            {
+                var itemOrden = new ItemOrden
+                {
+                    IdOrden = orden.IdOrden,
+                    IdProducto = item.IdProducto,
+                    Cantidad = item.Cantidad,
+                    PrecioUnitario = item.PrecioUnitario,
+                    Impuesto = item.Impuesto,
+                    Descuento = item.Descuento
+                };
+                _context.ItemsOrden.Add(itemOrden);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                orden.IdOrden,
+                orden.MontoTotal,
+                orden.EstadoOrden,
+                orden.NumeroFactura,
+                orden.FechaFactura,
+                Items = request.Items
+            });
+        }
+        // Obtener una orden por ID
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetOrden(int id)
+        {
+            var orden = await _context.Ordenes
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Producto)
+                .FirstOrDefaultAsync(o => o.IdOrden == id);
+
+            if (orden == null)
+                return NotFound();
+
+            return Ok(new
+            {
+                orden.IdOrden,
+                orden.IdUsuario,
+                orden.IdProveedor,
+                orden.FechaOrden,
+                orden.EstadoOrden,
+                orden.MontoTotal,
+                orden.NumeroFactura,
+                orden.TipoComprobante,
+                orden.FechaFactura,
+                orden.MetodoPago,
+                orden.Moneda,
+                orden.Impuestos,
+                orden.Descuento,
+                Items = orden.Items.Select(i => new {
+                    i.IdItemOrden,
+                    i.IdProducto,
+                    Producto = i.Producto.NombreProducto,
+                    i.Cantidad,
+                    i.PrecioUnitario,
+                    i.Impuesto,
+                    i.Descuento
+                })
+            });
+        }
+
+        // Obtener todas las órdenes
+        [HttpGet]
+        public async Task<IActionResult> GetOrdenes()
+        {
+            var ordenes = await _context.Ordenes
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Producto)
+                .ToListAsync();
+
+            return Ok(ordenes.Select(o => new {
+                o.IdOrden,
+                o.IdUsuario,
+                o.IdProveedor,
+                o.FechaOrden,
+                o.EstadoOrden,
+                o.MontoTotal,
+                o.NumeroFactura,
+                o.FechaFactura,
+                Items = o.Items.Select(i => new {
+                    i.IdProducto,
+                    Producto = i.Producto.NombreProducto,
+                    i.Cantidad,
+                    i.PrecioUnitario
+                })
+            }));
+        }
+        // Confirmar pago y generar factura
+        [HttpPut("{id}/confirmar-pago")]
+        public async Task<IActionResult> ConfirmarPago(int id, [FromBody] ConfirmarPagoRequest request)
+        {
+            var orden = await _context.Ordenes
+                .Include(o => o.Items)
+                .FirstOrDefaultAsync(o => o.IdOrden == id);
+
+            if (orden == null)
+                return NotFound(new { mensaje = "Orden no encontrada" });
+
+            if (orden.EstadoOrden == "Pagada")
+                return BadRequest(new { mensaje = "La orden ya está pagada" });
+
+            // Actualizar datos de la orden como factura
+            orden.NumeroFactura = request.NumeroFactura;
+            orden.NumeroOrdenCompra = "OC-" + DateTime.Now.Ticks;  //TEMPORAL: El cliente me deberá decir que es lo que quiere, si autogenerarlo o la api de pago lo trae
+            orden.TipoComprobante = request.TipoComprobante;
+            orden.MetodoPago = request.MetodoPago;
+            orden.Moneda = request.Moneda;
+            orden.Impuestos = request.Impuestos;
+            orden.Descuento = request.Descuento;
+            orden.FechaFactura = DateTime.Now;
+            orden.EstadoOrden = "Pagada";
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                orden.IdOrden,
+                orden.NumeroFactura,
+                orden.TipoComprobante,
+                orden.NumeroOrdenCompra,
+                orden.MetodoPago,
+                orden.Moneda,
+                orden.FechaFactura,
+                orden.MontoTotal,
+                orden.Impuestos,
+                orden.Descuento,
+                orden.EstadoOrden,
+                Items = orden.Items.Select(i => new
+                {
+                    i.IdProducto,
+                    i.Cantidad,
+                    i.PrecioUnitario
+                })
+            });
+        }
+
+
+
+    }
+}
