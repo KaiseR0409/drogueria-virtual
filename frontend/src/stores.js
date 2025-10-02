@@ -1,6 +1,6 @@
+import { writable, derived } from 'svelte/store';
 
-import { writable } from 'svelte/store';
-// Este store contendrá el estado de todos los filtros
+// --- Filtros de búsqueda ---
 export const filters = writable({
     busquedaNombre: '',
     busquedaPrincipioActivo: '',
@@ -9,59 +9,74 @@ export const filters = writable({
     laboratoriosSeleccionados: []
 });
 
-// Store para manejar el estado de autenticación del usuario
+// --- Sesión ---
 const initialToken = localStorage.getItem("token");
 const initialTipoUsuario = localStorage.getItem("tipoUsuario");
-const initialIdProveedor = localStorage.getItem("idProveedor");
+const initialIdUsuario = localStorage.getItem("idUsuario");
+const initialIdProveedor = localStorage.getItem("idProveedor"); // puede no estar
 
 export const session = writable({
     token: initialToken,
     tipoUsuario: initialTipoUsuario,
+    idUsuario: initialIdUsuario,
     idProveedor: initialIdProveedor,
     isLoggedIn: !!initialToken
 });
 
 /**
- * Función para iniciar sesión y actualizar el store y localStorage.
- * @param {object} data - Datos de la respuesta del login ({ token, tipoUsuario, idProveedor })
+ * Iniciar sesión: guardar token y datos en localStorage + actualizar store.
+ * @param {object} data - { token, tipoUsuario, idUsuario, idProveedor? }
  */
 export function login(data) {
-    // 1. Guardar en localStorage
+    // Guardar siempre estos datos
     localStorage.setItem("token", data.token);
     localStorage.setItem("tipoUsuario", data.tipoUsuario);
-    
-        // Guardar el ID del proveedor si el usuario es un proveedor
-    if (data.tipoUsuario === 'Proveedor' && data.idProveedor) {
+    localStorage.setItem("idUsuario", data.idUsuario);
+
+    // Guardar idProveedor solo si corresponde
+    if (data.tipoUsuario === "Proveedor" && data.idProveedor) {
         localStorage.setItem("idProveedor", data.idProveedor);
     }
-    
-    //Actualiza el store con los nuevos datos
+
+    // Actualizar store
     session.set({
         token: data.token,
         tipoUsuario: data.tipoUsuario,
-        // Usamos el ID de los datos de login, o null si no existe
-        idProveedor: data.idProveedor || null, 
+        idUsuario: data.idUsuario,
+        idProveedor: data.idProveedor || null,
         isLoggedIn: true
     });
 }
 
 /**
- * Función para cerrar sesión y limpiar el store y localStorage.
+ * Cerrar sesión: limpiar localStorage + resetear store.
  */
 export function logout() {
-    //Limpiar localStorage
     localStorage.removeItem("token");
     localStorage.removeItem("tipoUsuario");
-    localStorage.removeItem("idProveedor"); // 🎯 Limpiar el ID
-    
-    //Actualiza el store a estado vacío
+    localStorage.removeItem("idUsuario");
+    localStorage.removeItem("idProveedor");
+
     session.set({
         token: null,
         tipoUsuario: null,
+        idUsuario: null,
         idProveedor: null,
         isLoggedIn: false
     });
-    
-    // Opcional: Redirigir a la página de inicio
-    window.location.hash = '/'; 
+
+    // Redirigir a login/home
+    window.location.href = '/';
 }
+
+// --- Carrito global ---
+export const cart = writable([]);
+
+// Subtotales reactivos
+export const subtotal = derived(cart, ($cart) =>
+  $cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+);
+
+export const totalItems = derived(cart, ($cart) =>
+  $cart.reduce((sum, item) => sum + item.quantity, 0)
+);

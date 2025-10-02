@@ -26,6 +26,7 @@
       localStorage.setItem("token", data.token);
       localStorage.setItem("tipoUsuario", data.tipoUsuario);
       localStorage.setItem("nombreUsuario", data.nombreUsuario ?? data.nombre ?? '');
+      localStorage.setItem("idUsuario", data.idUsuario ?? data.id ?? '');
 
       // intentar obtener idProveedor desde la respuesta
       let idFromResponse =

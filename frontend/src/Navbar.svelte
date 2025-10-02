@@ -3,17 +3,21 @@
     let token = localStorage.getItem("token");
     let tipoUsuario = localStorage.getItem("tipoUsuario");
     let nombreUsuario = localStorage.getItem("nombreUsuario");
+    if(tipoUsuario === "Proveedor"){
+         nombreUsuario = localStorage.getItem("nombreProveedor");
+    }
     let idProveedor = localStorage.getItem("idProveedor");
-    console.log("Tipo Usuario en Navbar:", tipoUsuario);
-    console.log("Nombre Usuario en Navbar:", nombreUsuario);
-    console.log("ID Proveedor en Navbar:", idProveedor);
-    console.log("Token en Navbar:", token);
+    let idUsuario = localStorage.getItem("idUsuario");
+    console.log("LocalStorage en Navbar:", localStorage);
 
     function logout() {
         localStorage.removeItem("token");
         localStorage.removeItem("tipoUsuario");
         localStorage.removeItem("nombreUsuario");
         localStorage.removeItem("idProveedor"); 
+        localStorage.removeItem("idUsuario");
+        localStorage.removeItem("nombreProveedor");
+        window.location.href = "/login";
 
         token = null;
         
@@ -24,6 +28,8 @@
             tipoUsuario = localStorage.getItem('tipoUsuario');
             nombreUsuario = localStorage.getItem('nombreUsuario');
             idProveedor = localStorage.getItem('idProveedor');
+            idUsuario = localStorage.getItem('idUsuario');
+            console.log("LocalStorage actualizado en Navbar:", localStorage);
         }
     onMount(() => window.addEventListener('storage', onStorage));
     onDestroy(() => window.removeEventListener('storage', onStorage));

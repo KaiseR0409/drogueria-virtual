@@ -1,7 +1,7 @@
 <script>
     import { onMount } from "svelte";
     // import Filtros from "./Filtros.svelte";
-    import { filters } from "./stores.js";
+    import { cart, filters } from "./stores.js";
     let products = [];
     let errMessage = "";
 
@@ -134,6 +134,19 @@
     onMount(() => {
         fetchProducts();
     });
+    function cotizar(producto){
+        cart.update(items => {
+            const existing = items.find(p=> p.idProducto === producto.idProducto && p.idProveedor === producto.idProveedor);
+            if(existing){
+                return items.map(p => p.idProducto === producto.idProducto && p.idProveedor === producto.idProveedor ? {...p, quantity: p.quantity + 1} : p);
+
+            }else{
+                return [...items, {...producto, quantity: 1}];
+            }
+        });
+    
+
+    }
 </script>
 
 {#if errMessage}
@@ -188,7 +201,12 @@
                                             <button 
                                                 type="button" 
                                                 class="btn btn-checkout btn-sm" 
-                                                on:click={() => alert(`Solicitando cotización para ${product.nombreProducto} (Proveedor: ${prov.nombreProveedor})`)}
+                                                on:click={() => cotizar({ 
+                                                    idProducto: product.idProducto, 
+                                                    name: product.nombreProducto, 
+                                                    price: prov.precio, 
+                                                    proveedor: { idProveedor: prov.idProveedor, nombreProveedor: prov.nombreProveedor } 
+                                                })}
                                             >
                                                 Cotizar
                                             </button>
