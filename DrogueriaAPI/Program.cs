@@ -1,6 +1,8 @@
 using DrogueriaAPI.Data;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -10,6 +12,31 @@ var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddDbContext<DrogueriaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DrogueriaDb")));
 builder.Services.AddControllers();
+
+//agregar servicios de auth con jwt
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "super_secret_key")
+        ),
+        ValidateIssuer = false, // pon en true si usas issuer
+        ValidateAudience = false, // pon en true si usas audience
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddAuthorization();
+
 //configura CORS para permitir solicitudes desde el frontend
 builder.Services.AddCors(options =>
 {
@@ -43,6 +70,7 @@ app.UseCors(MyAllowSpecificOrigins);
 
 app.UseStaticFiles();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,6 +1,7 @@
 ﻿using BCrypt.Net;
 using DrogueriaAPI.Data;
 using DrogueriaAPI.Models;
+using DrogueriaAPI.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -57,6 +58,7 @@ namespace DrogueriaAPI.Controllers
             // 1. Buscar el usuario en la base de datos
             var usuario = await _context.Usuarios
                 .FirstOrDefaultAsync(u => u.Usuario == request.usuario);
+            
 
             if (usuario == null)
                 return Unauthorized(new { mensaje = "Usuario  nulo"});
@@ -69,7 +71,11 @@ namespace DrogueriaAPI.Controllers
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, usuario.NombreUsuario),
-                new Claim("tipoUsuario", usuario.TipoUsuario.ToString())
+                new Claim("tipoUsuario", usuario.TipoUsuario.ToString()),
+
+                new Claim("idUsuario", usuario.IdUsuario.ToString()),
+                
+
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("M7f!9vB2qR#s8WxZpL6eTjQ4uKdH1mNc"));
@@ -177,5 +183,6 @@ namespace DrogueriaAPI.Controllers
         {
             return _context.Usuarios.Any(e => e.IdUsuario == id);
         }
+        
     }
 }

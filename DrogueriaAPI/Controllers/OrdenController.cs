@@ -8,7 +8,7 @@ namespace DrogueriaAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")] // <- tu endpoint será api/orden
-    
+
     public class OrdenController : ControllerBase
     {
         private readonly DrogueriaDbContext _context;
@@ -144,10 +144,12 @@ namespace DrogueriaAPI.Controllers
         {
             var orden = await _context.Ordenes
                 .Include(o => o.Items)
+                .ThenInclude(i => i.Producto)
                 .FirstOrDefaultAsync(o => o.IdOrden == id);
 
             if (orden == null)
                 return NotFound(new { mensaje = "Orden no encontrada" });
+
 
             if (orden.EstadoOrden == "Pagada")
                 return BadRequest(new { mensaje = "La orden ya está pagada" });
@@ -163,6 +165,28 @@ namespace DrogueriaAPI.Controllers
             orden.FechaFactura = DateTime.Now;
             orden.EstadoOrden = "Pagada";
 
+            //descontar stock
+            foreach (var item in orden.Items)
+            {
+                var inventario = await _context.ProveedorProducto
+            .FirstOrDefaultAsync(pp =>
+                pp.IdProducto == item.IdProducto &&
+                pp.IdProveedor == orden.IdProveedor // Usa el proveedor de la orden
+            );
+
+                // Verifica si el inventario existe y si hay suficiente stock
+                if (inventario == null)
+                {
+                    return StatusCode(500, new { mensaje = $"Error: no se encontró el inventario" });
+                }
+                // Descontar el stock
+                if (inventario.Stock < item.Cantidad)
+                {
+                    return BadRequest(new { mensaje = $"No hay suficiente stock para el producto ID {item.IdProducto}" });
+                }
+                inventario.Stock -= item.Cantidad;
+
+            }
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -185,6 +209,42 @@ namespace DrogueriaAPI.Controllers
                     i.PrecioUnitario
                 })
             });
+        }
+        //  Obtener facturas por proveedor
+        [HttpGet("mis-facturas/{idProveedor}")]
+        public IActionResult MisFacturas(int idProveedor)
+        {
+            try
+            {
+                var facturas = _context.Ordenes
+                    .Where(o => o.IdProveedor == idProveedor)
+                    .OrderByDescending(o => o.FechaFactura)
+                    .Select(o => new
+                    {
+                        o.IdOrden,
+                        o.IdUsuario,
+                        o.IdProveedor,
+                        o.FechaOrden,
+                        o.EstadoOrden,
+                        o.MontoTotal,
+                        o.NumeroFactura,
+                        o.FechaFactura,
+                        Items = o.Items.Select(i => new
+                        {
+                            i.IdProducto,
+                            i.Producto,
+                            i.Cantidad,
+                            i.PrecioUnitario
+                        })
+                    })
+                    .ToList();
+
+                return Ok(facturas);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Error interno", error = ex.Message });
+            }
         }
 
 
