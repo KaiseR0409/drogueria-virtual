@@ -1,4 +1,5 @@
 <script>
+	import MisFacturas from './MisFacturas.svelte';
     import Router, { location } from 'svelte-spa-router';
     import Navbar from "./Navbar.svelte";
     import Home from "./Home.svelte";
@@ -13,6 +14,7 @@
         '/admin': AdminUsuarios,
         '/agregar-usuario': AgregarUsuario,
         '/gestionar-productos': GestionarProductos,
+        '/mis-facturas': MisFacturas
     };
 </script>
 

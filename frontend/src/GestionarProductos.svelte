@@ -31,6 +31,16 @@
             });
     }
 
+    function obtenerClaseStock(stock) {
+        if (stock <= 30) {
+            return "stock-bajo"; // Rojo: Menor o igual a 30
+        } else if (stock >= 31 && stock <= 80) {
+            return "stock-medio"; // Naranja/Amarillo: 31 a 80
+        } else {
+            return "stock-alto"; // Verde: Mayor o igual a 81
+        }
+    }
+
     function agregarProducto() {
         console.log("agregarProducto llamado"); // debug
         selectedProduct = null; // Modo Creación
@@ -136,7 +146,11 @@
             </div>
 
             <div class="modal-body">
-                <ProductModal product={selectedProduct} sucess={handleSuccess} close={handleClose} />
+                <ProductModal
+                    product={selectedProduct}
+                    sucess={handleSuccess}
+                    close={handleClose}
+                />
             </div>
 
             <div class="modal-actions">
@@ -197,14 +211,17 @@
                             >
                             <td>${inv.precio.toFixed(2)}</td>
                             <td>
-                                <span class:low-stock={inv.stock < 30}>
+                                <span 
+                                    class:stock-bajo={inv.stock <= 30}
+                                    class:stock-medio={inv.stock >= 31 && inv.stock <= 80}
+                                    class:stock-alto={inv.stock >= 81}
+                                >
                                     {inv.stock}
                                 </span>
                             </td>
                             <td class="actions-cell">
                                 <button
-                                    on:click={() =>
-                                        handleEdit(inv)}
+                                    on:click={() => handleEdit(inv)}
                                     class="btn btn-icon btn-edit"
                                 >
                                     &#9998;

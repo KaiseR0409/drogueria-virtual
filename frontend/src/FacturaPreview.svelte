@@ -1,69 +1,54 @@
 <script>
   import jsPDF from "jspdf";
   import autoTable from "jspdf-autotable";
-  export let orden = null; // la orden viene desde el Carrito
-  export let onClose; // callback para cerrar el modal
-  let loading = false;
 
-  function generarFacturaPDF() {
+  export let factura;
+
+  function generarPDF() {
+    if (!factura) return;
+
     const doc = new jsPDF();
 
     // Encabezado
     doc.setFontSize(16);
-    doc.text("Factura Provisional", 14, 20);
+    doc.text("Factura", 14, 20);
     doc.setFontSize(12);
     doc.text("Droguería Virtual", 14, 30);
-    doc.text("Fecha: " + new Date().toLocaleDateString(), 14, 38);
+    doc.text("Fecha Factura: " + new Date(factura.fechaFactura ?? factura.fechaOrden).toLocaleDateString(), 14, 38);
 
-    // Tabla con productos
-    const rows = orden.items.map(item => [
-      item.nombreProducto ?? item.name ?? "Producto",
-      item.cantidad ?? item.quantity,
-      "$" + (item.precioUnitario ?? item.price).toFixed(2),
-      "$" + ((item.precioUnitario ?? item.price) * (item.cantidad ?? item.quantity)).toFixed(2)
+    // Datos principales
+    doc.text("N° Factura: " + factura.numeroFactura, 14, 46);
+    doc.text("ID Orden: " + factura.idOrden, 14, 52);
+    doc.text("Estado: " + factura.estadoOrden, 14, 58);
+    doc.text("Usuario (ID " + factura.idUsuario + ")", 14, 64);
+    doc.text("Proveedor: " + factura.idProveedor, 14, 70);
+
+    // Tabla productos
+    const rows = (factura.items ?? []).map(item => [
+      item.nombreProducto ?? "Producto",
+      item.cantidad,
+      "$" + (item.precioUnitario).toFixed(2),
+      "$" + (item.precioUnitario * item.cantidad).toFixed(2)
     ]);
 
     autoTable(doc, {
       head: [["Producto", "Cantidad", "Precio Unitario", "Subtotal"]],
       body: rows,
-      startY: 50
+      startY: 80,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [200, 0, 0] } 
     });
 
     // Total
-    let finalY = doc.lastAutoTable.finalY || 80;
+    let finalY = doc.lastAutoTable.finalY || 100;
     doc.setFontSize(14);
-    doc.text("Total: $" + orden.montoTotal.toFixed(2), 14, finalY + 10);
+    doc.text("Total: $" + factura.montoTotal.toFixed(2), 14, finalY + 10);
 
-    // Guardar
-    doc.save("Factura_" + orden.numeroFactura + ".pdf");
+    // Descargar
+    doc.save("Factura_" + factura.numeroFactura + ".pdf");
   }
-
-  //esto va para crear la factura para el proveedor
-  /*
-  let facturaGenerada = null; // orden creada y pasada a FacturaPreview
-// luego en Carrito.svelte, después de crear la orden exitosamente:
-  facturaGenerada = {
-            numeroFactura: "TEMP-12345",
-            idProveedor: 16,
-            montoTotal: 50000,
-            items: get(cart) // o los items reales de la respuesta
-          };
-  */
 </script>
 
-{#if orden}
-<div class="modal-backdrop">
-  <div class="modal">
-    <h2>Factura provisional lista</h2>
-    <p><strong>N° Factura:</strong> {orden.numeroFactura}</p>
-    <p><strong>Proveedor:</strong> {orden.idProveedor}</p>
-    <p><strong>Total:</strong> ${orden.montoTotal.toFixed(2)}</p>
-
-    <div class="acciones">
-      <button on:click={generarFacturaPDF} class="btn btn-primary">Generar PDF</button>
-      <button on:click={onClose} class="btn btn-secondary">Cerrar</button>
-    </div>
-  </div>
-</div>
-{/if}
-
+<button on:click={generarPDF} class="btn btn-primary">
+  Descargar PDF
+</button>

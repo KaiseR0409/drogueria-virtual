@@ -1,5 +1,5 @@
 <script>
-	import ComprobanteCliente from './ComprobanteCliente.svelte';
+  import ComprobanteCliente from "./ComprobanteCliente.svelte";
   import { jsPDF } from "jspdf";
   import { get } from "svelte/store";
   import { cart, subtotal, totalItems } from "./stores.js";
@@ -7,7 +7,7 @@
   let ordenesConfirmadas = []; // orden creada y pasada a ComprobanteCliente
   let mostrarComprobante = false;
   const resultados = [];
-  
+  let confirmacionExitosa = false;
 
   // token e idUsuario desde localStorage
   const token = localStorage.getItem("token");
@@ -43,8 +43,6 @@
       acc[key].push(item);
       return acc;
     }, {});
-
-    
 
     // Para cada proveedor, enviar POST /api/orden
     for (const [idProveedor, itemsProveedor] of Object.entries(grupos)) {
@@ -101,13 +99,10 @@
             message: text,
           });
         } else {
-
           const data = await res.json();
           console.log("Orden creada para proveedor", idProveedor, data);
           resultados.push({ idProveedor, ok: true, data });
           ordenesConfirmadas.push(data);
-          
-          
         }
       } catch (err) {
         console.error(
@@ -124,8 +119,56 @@
     // Si todo OK, limpiar carrito; si hubo fallos, mantener y notificar
     const algunFallo = resultados.some((r) => !r.ok);
     if (!algunFallo) {
-      cart.set([]); // vacía el carrito global
-      mostrarComprobante = true;
+      let confirmacion_exito = true;
+      //iterar sobre ordenes creadas y confirmar el pago
+      for (const orden of ordenesConfirmadas) {
+        const confirmPagoUrl = `http://localhost:5029/api/orden/${orden.idOrden}/confirmar-pago`;
+
+        const pagoRequest = {
+          NumeroFactura: orden.numeroFactura,
+          TipoComprobante: orden.tipoComprobante,
+          MetodoPago: "Tarjeta", // ASUMIENDO PAGO EXITOSO
+          Moneda: "CLP",
+          Impuestos: orden.impuestos,
+          Descuento: orden.descuento,
+        };
+        try {
+          const resPago = await fetch(confirmPagoUrl, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify(pagoRequest),
+          });
+
+          if (!resPago.ok) {
+            // Si el descuento de stock falla, registramos el error
+            console.error(
+              `Fallo al confirmar pago/descontar stock para Orden ${orden.idOrden}`,
+            );
+            confirmacionExitosa = false;
+          }else{
+            const dataPago = await resPago.json();
+            confirmacionExitosa = true;
+          }
+        } catch (err) {
+          console.error(
+            `Fetch error al confirmar pago para Orden ${orden.idOrden}:`,
+            err,
+          );
+          confirmacionExitosa = false;
+        }
+      }
+      if(confirmacionExitosa){
+        cart.set([]); // limpiar carrito solo si todo OK
+        mostrarComprobante = true; // mostrar comprobante
+        
+      } else {
+        alert("Las órdenes se crearon, pero hubo errores al confirmar el pago o descontar stock. Revisa la consola para más detalles.");
+      }
+
+      
     } else {
       alert(
         "Se crearon algunas órdenes, pero hubo errores. Revisa la consola para más detalles.",
@@ -165,11 +208,10 @@
     <p>El carrito está vacío.</p>
   {/if}
 
-
-
   {#if mostrarComprobante}
     <ComprobanteCliente
-      ordenes={ordenesConfirmadas} onClose={() => (mostrarComprobante = false)}
+      ordenes={ordenesConfirmadas}
+      onClose={() => (mostrarComprobante = false)}
     />
   {/if}
 </div>

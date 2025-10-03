@@ -149,7 +149,7 @@
     <h3>{isEditing ? "Editar Inventario" : "Publicar Nuevo Producto"}</h3>
 
     <form on:submit|preventDefault={handleSubmit}>
-        <fieldset class="grid-2-cols">
+        <fieldset class="">
             <legend>Información Farmacéutica</legend>
             <label
                 >Nombre: <input
@@ -205,7 +205,7 @@
                 /></label
             >
 
-            <label class="full-width"
+            <label class=""
                 >Almacenamiento:
                 <textarea
                     bind:value={formData.condicionesAlmacenamiento}
@@ -215,7 +215,7 @@
             </label>
         </fieldset>
 
-        <fieldset class="upload-area full-width">
+        <fieldset class="">
             <legend>Foto del Producto</legend>
             <div class="file-input-group">
                 <input type="file" accept="image/*" class="file-input" />
@@ -226,7 +226,7 @@
             <p class="upload-info">Archivos permitidos: JPG, PNG. Máx 2MB.</p>
         </fieldset>
 
-        <fieldset class="grid-2-cols inventory-fields">
+        <fieldset class="">
             <legend>Inventario y Precios</legend>
             <label
                 >Precio de Venta ($): <input

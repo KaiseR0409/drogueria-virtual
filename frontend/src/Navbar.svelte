@@ -69,8 +69,12 @@
                             <li class="nav-item">
                                 <a
                                     class="nav-link text-light"
-                                    href="#/gestionar-productos">Gestionar Productos</a
+                                    href="#/gestionar-productos"><button class="btn btn-warning"> Gestionar Productos </button></a
                                 >
+                                
+                            </li>
+                            <li class="nav-item">
+                                <a style="text-decoration: none; color:" href="#/mis-facturas"><button class="btn btn-warning"> Mis Facturas</button></a>
                             </li>
                         {/if}
                     {/if}            

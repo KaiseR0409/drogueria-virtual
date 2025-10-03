@@ -160,11 +160,13 @@
 {:else}
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {#each products as product}
+        <!--Asegurarse que tenga stock mayor a 0-->
+        {#if product.proveedores?.some(prov => prov.stock > 0)}
             <div class="col">
-                <div class="card border border-primary shadow-0 h-100">
+                <div class="card">
                     <div class="bg-image hover-overlay ripple" data-mdb-ripple-color="light">
                         <img 
-                            src={product.imagenUrl || 'https://via.placeholder.com/300x180?text=Producto'} 
+                            src={product.imagenUrl || 'https://api.redfarma.cl/web/v1.5/Articulo/imagen_204-1750.jpg'} 
                             class="img-fluid" 
                             alt={product.nombreProducto} 
                         />
@@ -208,7 +210,7 @@
                                                     proveedor: { idProveedor: prov.idProveedor, nombreProveedor: prov.nombreProveedor } 
                                                 })}
                                             >
-                                                Cotizar
+                                                Agregar Producto
                                             </button>
                                         </div>
                                     </div>
@@ -240,6 +242,7 @@
                     </div>
                 </div>
             </div>
+        {/if}
         {/each}
     </div>
 {/if}
