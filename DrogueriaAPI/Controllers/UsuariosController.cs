@@ -118,10 +118,10 @@ namespace DrogueriaAPI.Controllers
             }
 
             //Setear fechas y estado inicial
-            usuario.fechaCreacion = DateTime.Now;
-            usuario.fechaActualizacion = DateTime.Now; // <-- necesario
+            usuario.FechaCreacion = DateTime.Now;
+            usuario.FechaActualizacion = DateTime.Now; 
             usuario.Password = BCrypt.Net.BCrypt.HashPassword(usuario.Password);
-            usuario.EstadoUsuario = "Activo";
+            usuario.EstadoUsuario = "Inactivo";
 
            
 
@@ -141,7 +141,7 @@ namespace DrogueriaAPI.Controllers
                 return BadRequest();
             }
 
-            usuario.fechaActualizacion = DateTime.Now;
+            usuario.FechaActualizacion = DateTime.Now;
             _context.Entry(usuario).State = EntityState.Modified;
 
             try
