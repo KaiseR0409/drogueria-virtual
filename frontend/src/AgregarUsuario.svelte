@@ -2,18 +2,40 @@
     import { onMount } from "svelte";
 
     let nombreUsuario = "";
+    let usuario = "";
     let password = "";
-    let tipoUsuario = "Cliente"; // Puede ser "Administrador" o "Cliente"
+    let tipoUsuario = "Cliente";
+    let tipoEstablecimiento = "Cliente";
+    let direccion1 = "";
+    let direccion2 = "";
+    let direccion3 = "";
+    let correo = "";
+    let telefono = "";
     let mensaje = "";
     let error = "";
+
+        
+    let telefono_usuario = "";
+    
+
+    let telefono_completo;
+
+   
+    $: telefono_completo = `+56 9 ${telefono_usuario}`;
+
 
     async function agregarUsuario() {
         mensaje = "";
         error = "";
 
-        // Validar campos
-        if (!nombreUsuario || !password) {
-            error = "Completa todos los campos";
+        // Validar campos básicos
+        if (!nombreUsuario || !usuario || !password || !direccion1 || !correo || !telefono) {
+            error = "Completa todos los campos obligatorios";
+            return;
+        }
+
+        if (telefono.length !== 12) {
+            error = "El teléfono debe tener exactamente 8 dígitos";
             return;
         }
 
@@ -23,12 +45,16 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     NombreUsuario: nombreUsuario,
-                    Usuario: nombreUsuario,
+                    Usuario: usuario,
                     Password: password,
                     TipoUsuario: tipoUsuario,
-                    TipoEstablecimiento: "Cliente",
-                    direccion1: "Sin dirección",
-                    EstadoUsuario: "Activo",
+                    TipoEstablecimiento: tipoEstablecimiento,
+                    Direccion1: direccion1,
+                    Direccion2: direccion2 || null,
+                    Direccion3: direccion3 || null,
+                    EstadoUsuario: "Inactivo",
+                    Correo: correo,
+                    Telefono: telefono // Backend agrega +56 9 automáticamente
                 }),
             });
 
@@ -38,35 +64,19 @@
             }
 
             const data = await res.json();
-            console.log(data);
-
-            // si es proveedor, crearlo también en la tabla proveedores
-            if (tipoUsuario === "Proveedor") {
-                const proveedorRes = await fetch(
-                    `http://localhost:5029/api/Proveedor/registrar/${data.idUsuario}`,
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            nombreProveedor: data.nombreUsuario,
-                        }),
-                    },
-                );
-
-                
-
-                if (!proveedorRes.ok) {
-                    error = proveedorRes.statusText;
-                    console.log(error);
-                    throw new Error("Error al registrar proveedor");
-                }
-            }
-
             mensaje = `Usuario ${data.nombreUsuario} agregado correctamente!`;
+
             // Limpiar campos
             nombreUsuario = "";
+            usuario = "";
             password = "";
             tipoUsuario = "Cliente";
+            tipoEstablecimiento = "Cliente";
+            direccion1 = "";
+            direccion2 = "";
+            direccion3 = "";
+            correo = "";
+            telefono = "";
         } catch (e) {
             error = e.message;
         }
@@ -84,26 +94,40 @@
     {/if}
 
     <form on:submit|preventDefault={agregarUsuario} class="form-agregar">
+
         <div class="mb-3">
-            <label class="form-label">Nombre de Usuario</label>
-            <input
-                type="text"
-                class="form-control"
-                bind:value={nombreUsuario}
-                placeholder="Ingrese nombre de usuario"
-                required
-            />
+            <label class="form-label">Nombre Completo</label>
+            <input type="text" class="form-control" bind:value={nombreUsuario} required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Usuario (login)</label>
+            <input type="text" class="form-control" bind:value={usuario} required />
         </div>
 
         <div class="mb-3">
             <label class="form-label">Contraseña</label>
-            <input
-                type="password"
+            <input type="password" class="form-control" bind:value={password} required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Correo</label>
+            <input type="email" class="form-control" bind:value={correo} required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Teléfono</label>
+            <input 
+                type="text"
                 class="form-control"
-                bind:value={password}
-                placeholder="Ingrese contraseña"
+                maxlength="12"
+                bind:value={telefono}
+                placeholder="Ingresa el número"
                 required
             />
+            <small class="form-text text-muted">
+                Ejemplo: +56912345678
+            </small>
         </div>
 
         <div class="mb-3">
@@ -113,6 +137,26 @@
                 <option value="Administrador">Administrador</option>
                 <option value="Proveedor">Proveedor</option>
             </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Tipo de Establecimiento</label>
+            <input type="text" class="form-control" bind:value={tipoEstablecimiento} />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Dirección 1</label>
+            <input type="text" class="form-control" bind:value={direccion1} required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Dirección 2 (opcional)</label>
+            <input type="text" class="form-control" bind:value={direccion2} />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Dirección 3 (opcional)</label>
+            <input type="text" class="form-control" bind:value={direccion3} />
         </div>
 
         <button type="submit" class="btn btn-primary">Agregar Usuario</button>
