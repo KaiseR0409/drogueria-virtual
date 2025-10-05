@@ -1,9 +1,10 @@
 <script>
     import { onMount } from "svelte";
 
-    // recibir props
+    // recibir props (Svelte 5 runas)
     let { product, close, sucess } = $props();
 
+    // Determina si estamos editando
     const isEditing = $derived(!!product?.idProducto);
 
     // Estado reactivo del formulario con campos iniciales
@@ -24,8 +25,9 @@
     let submitting = $state(false);
 
     onMount(() => {
+        // Precargar datos si estamos editando
         if (isEditing) {
-            const p = product.producto; //objeto completo del producto
+            const p = product.producto; // objeto completo del producto
             formData = {
                 nombreProducto: p.nombreProducto || "",
                 principioActivo: p.principioActivo || "",
@@ -34,6 +36,7 @@
                 presentacionComercial: p.presentacionComercial || "",
                 laboratorioFabricante: p.laboratorioFabricante || "",
                 registroSanitario: p.registroSanitario || "",
+                // Formato de fecha para input type="date"
                 fechaVencimiento: p.fechaVencimiento
                     ? p.fechaVencimiento.split("T")[0]
                     : "",
@@ -42,7 +45,6 @@
                 stock: product.stock || 0,
                 imagenUrl: p.imagenUrl || "",
             };
-            console.log("Editing product, pre-filled data:", formData);
         }
     });
 
@@ -56,30 +58,22 @@
                 return;
             }
 
-            // Validación cliente
+            // Validación de campos requeridos
             const required = [
-                "nombreProducto",
-                "principioActivo",
-                "concentracion",
-                "formaFarmaceutica",
-                "presentacionComercial",
-                "laboratorioFabricante",
-                "registroSanitario",
-                "condicionesAlmacenamiento",
-                "fechaVencimiento",
+                "nombreProducto", "principioActivo", "concentracion", "formaFarmaceutica", 
+                "presentacionComercial", "laboratorioFabricante", "registroSanitario", 
+                "condicionesAlmacenamiento", "fechaVencimiento"
             ];
             const missing = required.filter(
                 (k) => (formData[k] ?? "").toString().trim().length === 0,
             );
             if (missing.length) {
-                alert(
-                    "Complete los campos obligatorios: " + missing.join(", "),
-                );
+                alert("Complete los campos obligatorios: " + missing.join(", "));
                 submitting = false;
                 return;
             }
 
-            // Payload plano según Swagger
+            // Construcción del payload
             const body = {
                 nombreProducto: formData.nombreProducto.trim(),
                 principioActivo: formData.principioActivo.trim(),
@@ -88,11 +82,9 @@
                 presentacionComercial: formData.presentacionComercial.trim(),
                 laboratorioFabricante: formData.laboratorioFabricante.trim(),
                 registroSanitario: formData.registroSanitario.trim(),
-                fechaVencimiento: new Date(
-                    formData.fechaVencimiento,
-                ).toISOString(),
-                condicionesAlmacenamiento:
-                    formData.condicionesAlmacenamiento.trim(),
+                // Asegura formato ISO para la API
+                fechaVencimiento: new Date(formData.fechaVencimiento).toISOString(),
+                condicionesAlmacenamiento: formData.condicionesAlmacenamiento.trim(),
                 imagenUrl: formData.imagenUrl?.trim() || "",
                 precio: Number(formData.precio),
                 stock: Number(formData.stock),
@@ -101,19 +93,16 @@
             let method;
             let url;
             if (isEditing) {
-                //MODO EDICION
+                // MODO EDICION (PUT)
                 const idProducto = product.idProducto;
                 method = "PUT";
                 url = `http://localhost:5029/api/proveedor/${idProveedor}/producto/${idProducto}`;
-                body.idProducto = product.idProducto; // necesario para PUT
+                body.idProducto = product.idProducto; // ID necesario para el PUT
             } else {
+                // MODO CREACION (POST)
                 method = "POST";
                 url = `http://localhost:5029/api/proveedor/${idProveedor}/producto`;
             }
-            console.log(
-                `${isEditing ? "Updating" : "Creating"} product with data:`,
-                body,
-            );
 
             const res = await fetch(url, {
                 method: method,
@@ -124,17 +113,14 @@
             if (!res.ok) {
                 const text = await res.text();
                 console.error("API error:", res.status, text);
-                alert(
-                    `Error al ${isEditing ? "editar" : "guardar"} el producto. Estado: ${res.status}.`,
-                );
+                alert(`Error al ${isEditing ? "editar" : "guardar"} el producto. Estado: ${res.status}.`);
                 return;
             }
-            // Si es PUT (204 No Content), res.json() fallará, pero podemos asumir éxito.
-            const message = isEditing
-                ? "Producto editado con éxito."
-                : "Producto publicado con éxito.";
+            
+            // Éxito
+            const message = isEditing ? "Producto editado con éxito." : "Producto publicado con éxito.";
             alert(message);
-            sucess(); // notificar al padre
+            sucess(); // notificar al padre para refrescar la lista
             close();
         } catch (err) {
             console.error("handleSubmit error:", err);
@@ -145,122 +131,52 @@
     }
 </script>
 
-<div class="modal-content">
-    <h3>{isEditing ? "Editar Inventario" : "Publicar Nuevo Producto"}</h3>
-
-    <form on:submit|preventDefault={handleSubmit}>
-        <fieldset class="">
-            <legend>Información Farmacéutica</legend>
-            <label
-                >Nombre: <input
-                    type="text"
-                    bind:value={formData.nombreProducto}
-                    required
-                /></label
-            >
-            <label
-                >Principio Activo: <input
-                    type="text"
-                    bind:value={formData.principioActivo}
-                    required
-                /></label
-            >
-            <label
-                >Concentración: <input
-                    type="text"
-                    bind:value={formData.concentracion}
-                /></label
-            >
-            <label
-                >Forma Farmacéutica: <input
-                    type="text"
-                    bind:value={formData.formaFarmaceutica}
-                    required
-                /></label
-            >
-            <label
-                >Presentación: <input
-                    type="text"
-                    bind:value={formData.presentacionComercial}
-                /></label
-            >
-            <label
-                >Laboratorio: <input
-                    type="text"
-                    bind:value={formData.laboratorioFabricante}
-                    required
-                /></label
-            >
-            <label
-                >Registro Sanitario: <input
-                    type="text"
-                    bind:value={formData.registroSanitario}
-                /></label
-            >
-            <label
-                >Vencimiento: <input
-                    type="date"
-                    bind:value={formData.fechaVencimiento}
-                    required
-                /></label
-            >
-
-            <label class=""
-                >Almacenamiento:
-                <textarea
-                    bind:value={formData.condicionesAlmacenamiento}
-                    rows="2"
-                    placeholder="Ej: Ambiente fresco y seco"
-                ></textarea>
-            </label>
-        </fieldset>
-
-        <fieldset class="">
-            <legend>Foto del Producto</legend>
-            <div class="file-input-group">
-                <input type="file" accept="image/*" class="file-input" />
-                <button type="button" class="btn btn-secondary"
-                    >Seleccionar y Subir</button
-                >
-            </div>
-            <p class="upload-info">Archivos permitidos: JPG, PNG. Máx 2MB.</p>
-        </fieldset>
-
-        <fieldset class="">
-            <legend>Inventario y Precios</legend>
-            <label
-                >Precio de Venta ($): <input
-                    type="number"
-                    step="0.01"
-                    bind:value={formData.precio}
-                    min="0.01"
-                    required
-                /></label
-            >
-            <label
-                >Stock Disponible: <input
-                    type="number"
-                    bind:value={formData.stock}
-                    min="0"
-                    required
-                /></label
-            >
-        </fieldset>
-
-        <div class="actions">
-            <button type="button" class="btn btn-cancel" on:click={close}
-                >Cancelar</button
-            >
-            {#if isEditing}
-                <button type="submit" class="btn btn-submit">
-                    Editar producto
-                </button>
-            {:else}
-                <button type="submit" class="btn btn-submit" disabled={submitting}>
-                    {submitting ? "Publicando..." : "Publicar Producto"}
-                </button>
-            {/if}
-            
+<form on:submit|preventDefault={handleSubmit}>
+    <fieldset>
+        <legend>Información Farmacéutica</legend>
+        <div class="form-grid">
+            <label>Nombre: <input type="text" bind:value={formData.nombreProducto} required /></label>
+            <label>Principio Activo: <input type="text" bind:value={formData.principioActivo} required /></label>
+            <label>Concentración: <input type="text" bind:value={formData.concentracion} /></label>
+            <label>Forma Farmacéutica: <input type="text" bind:value={formData.formaFarmaceutica} required /></label>
+            <label>Presentación: <input type="text" bind:value={formData.presentacionComercial} /></label>
+            <label>Laboratorio: <input type="text" bind:value={formData.laboratorioFabricante} required /></label>
+            <label>Registro Sanitario: <input type="text" bind:value={formData.registroSanitario} /></label>
+            <label>Vencimiento: <input type="date" bind:value={formData.fechaVencimiento} required /></label>
         </div>
-    </form>
-</div>
+        <label class="full-width">Almacenamiento:
+            <textarea
+                bind:value={formData.condicionesAlmacenamiento}
+                rows="2"
+                placeholder="Ej: Ambiente fresco y seco"
+            ></textarea>
+        </label>
+    </fieldset>
+
+    <fieldset>
+        <legend>Foto del Producto</legend>
+        <div class="file-input-group">
+            <input type="file" accept="image/*" class="file-input" />
+        </div>
+        <p class="upload-info">Archivos permitidos: JPG, PNG. Máx 2MB.</p>
+    </fieldset>
+
+    <fieldset>
+        <legend>Inventario y Precios</legend>
+        <div class="form-grid">
+            <label>Precio de Venta ($): <input type="number" step="0.01" bind:value={formData.precio} min="0.01" required /></label>
+            <label>Stock Disponible: <input type="number" bind:value={formData.stock} min="0" required /></label>
+        </div>
+    </fieldset>
+
+    <div class="actions">
+        <button type="button" class="btn btn-cancel" on:click={close}>Cancelar</button>
+        <button type="submit" class="btn btn-submit" disabled={submitting}>
+            {#if submitting}
+                Guardando...
+            {:else}
+                {isEditing ? "Guardar Cambios" : "Publicar Producto"}
+            {/if}
+        </button>
+    </div>
+</form>

@@ -1,7 +1,7 @@
 <script>
     import { onMount } from "svelte";
-    // import Filtros from "./Filtros.svelte";
-    import { cart, filters } from "./stores.js";
+    import { cart, filters } from "./stores.js"; // Asegúrate que 'filters' está disponible
+
     let products = [];
     let errMessage = "";
 
@@ -23,13 +23,11 @@
         expanded = new Set(expanded);
     }
 
-    //funcion traer productos
+    //función traer productos (La lógica de fetch y agrupación permanece igual)
     async function fetchProducts() {
+        // ... (Tu lógica de fetchProducts() va aquí, sin cambios) ...
         try {
-            // 🎯 SIMPRE USAMOS EL ENDPOINT GLOBAL PARA EL CATÁLOGO 🎯
             let apiUrl = `http://localhost:5029/api/ProveedorProducto/InventarioCompletoConFiltros`;
-
-            // Adjuntamos los filtros
             const params = new URLSearchParams();
             $filters.laboratoriosSeleccionados.forEach((lab) =>
                 params.append("laboratoriosSeleccionados", lab),
@@ -60,15 +58,11 @@
                     `Error en la solicitud: ${res.status} ${res.statusText}`,
                 );
             const data = await res.json();
-            console.log("Datos recibidos de la API (Catálogo Global):", data);
-
-            // === LÓGICA DE AGRUPACIÓN POR PRODUCTO (Múltiples Proveedores) ===
 
             if (Array.isArray(data) && data.length && data[0].producto) {
                 const grouped = data.reduce((acc, item) => {
                     const prodId = item.idProducto;
                     if (!acc[prodId]) {
-                        // Inicializamos el objeto del producto (datos farmacéuticos)
                         const p = item.producto || {};
                         acc[prodId] = {
                             idProducto: item.idProducto,
@@ -85,11 +79,9 @@
                             condicionesAlmacenamiento:
                                 p.condicionesAlmacenamiento ?? "",
                             imagenUrl: p.imagenUrl ?? "",
-                            // Lista de proveedores de este producto
                             proveedores: [],
                         };
                     }
-                    // Añadimos la información del proveedor específico (precio, stock, nombre)
                     acc[prodId].proveedores.push({
                         idProveedor: item.idProveedor,
                         nombreProveedor:
@@ -101,15 +93,10 @@
                     });
                     return acc;
                 }, {});
-
-                // El array final es la lista de productos únicos con sus opciones de proveedor anidadas.
                 products = Object.values(grouped);
             } else {
-                // Si la API no retorna datos anidados o está vacía
                 products = [];
             }
-
-            console.log("Catálogo Global Cargado:", products);
             errMessage = "";
         } catch (error) {
             console.error(
@@ -121,6 +108,7 @@
             products = [];
         }
     }
+
 
     let debounceTimer;
     $: $filters,
@@ -134,18 +122,17 @@
     onMount(() => {
         fetchProducts();
     });
+    
+    // Función de cotización (sin cambios)
     function cotizar(producto){
         cart.update(items => {
             const existing = items.find(p=> p.idProducto === producto.idProducto && p.idProveedor === producto.idProveedor);
             if(existing){
                 return items.map(p => p.idProducto === producto.idProducto && p.idProveedor === producto.idProveedor ? {...p, quantity: p.quantity + 1} : p);
-
             }else{
                 return [...items, {...producto, quantity: 1}];
             }
         });
-    
-
     }
 </script>
 
@@ -157,92 +144,101 @@
     <div class="alert alert-info" role="alert">
         No se encontraron productos que coincidan con los criterios de búsqueda.
     </div>
+
 {:else}
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div class="product-grid">
         {#each products as product}
-        <!--Asegurarse que tenga stock mayor a 0-->
-        {#if product.proveedores?.some(prov => prov.stock > 0)}
-            <div class="col">
-                <div class="card">
-                    <div class="bg-image hover-overlay ripple" data-mdb-ripple-color="light">
+            {#if product.proveedores?.some(prov => prov.stock > 0)}
+                <div class="product-card">
+                    <div class="card-image-wrapper">
                         <img 
-                            src={product.imagenUrl || 'https://api.redfarma.cl/web/v1.5/Articulo/imagen_204-1750.jpg'} 
-                            class="img-fluid" 
+                            src={product.imagenUrl || 'https://via.placeholder.com/300x200?text=Sin+Imagen'} 
                             alt={product.nombreProducto} 
+                            class="product-image" 
                         />
-                        <a href="#!">
-                            <div class="mask" style="background-color: rgba(251, 251, 251, 0.15)"></div>
-                        </a>
                     </div>
 
-                    <div class="card-header text-truncate" title={product.nombreProducto}>
-                        {product.nombreProducto}
-                    </div>
+                    <div class="card-content">
+                        <h3 class="product-name" title={product.nombreProducto}>
+                            {product.nombreProducto}
+                        </h3>
+                        <p class="product-principio">{product.principioActivo}</p>
 
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title text-dark">{product.principioActivo}</h5>
+                        <div class="product-meta">
+                            <span class="meta-label">Laboratorio:</span>
+                            <span class="meta-value">{product.laboratorioFabricante}</span>
+                        </div>
+                        <div class="product-meta">
+                            <span class="meta-label">Presentación:</span>
+                            <span class="meta-value">{product.presentacionComercial}</span>
+                        </div>
+                        <div class="product-meta">
+                            <span class="meta-label">Vencimiento:</span>
+                            <span class="meta-value">
+                                {product.fechaVencimiento ? new Date(product.fechaVencimiento).toLocaleDateString() : 'N/A'}
+                            </span>
+                        </div>
                         
-                        <p class="card-text mb-2 text-muted small">
-                            {product.presentacionComercial}<br>
-                            Vencimiento: {product.fechaVencimiento ? new Date(product.fechaVencimiento).toLocaleDateString() : 'N/A'}
-                        </p>
-
                         {#if product.proveedores?.length > 0}
-                            <h6 class="mb-2 fw-bold text-primary">Opciones de Proveedor:</h6>
-                            <div class="supplier-list flex-grow-1 overflow-auto mb-3">
-                                {#each product.proveedores as prov (prov.idProveedor)}
-                                    <div class="supplier-option d-flex justify-content-between align-items-center py-1 border-bottom">
-                                        <div class="supplier-details">
-                                            <p class="mb-0 small fw-semibold text-dark">{prov.nombreProveedor}</p>
-                                            <p class="mb-0 tiny text-muted">Stock: {prov.stock}</p>
+                            <div class="provider-options-block">
+                                <h4 class="provider-title">Opciones de Compra:</h4>
+                                <div class="supplier-list">
+                                    {#each product.proveedores.filter(prov => prov.stock > 0) as prov (prov.idProveedor)}
+                                        <div class="supplier-option">
+                                            <div class="supplier-info">
+                                                <p class="supplier-name">{prov.nombreProveedor}</p>
+                                                <p class="supplier-stock">Stock: <span class="stock-value">{prov.stock}</span></p>
+                                            </div>
+                                            <div class="supplier-action">
+                                                <span class="supplier-price">
+                                                    ${prov.precio?.toFixed ? prov.precio.toFixed(2) : prov.precio}
+                                                </span>
+                                                <button 
+                                                    class="btn-add-to-cart" 
+                                                    on:click={() => cotizar({ 
+                                                        idProducto: product.idProducto, 
+                                                        name: product.nombreProducto, 
+                                                        price: prov.precio, 
+                                                        proveedor: { idProveedor: prov.idProveedor, nombreProveedor: prov.nombreProveedor } 
+                                                    })}
+                                                >
+                                                    + Añadir
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div class="supplier-actions d-flex align-items-center">
-                                            <p class="mb-0 fw-bold fs-6 me-2 text-success">
-                                                ${prov.precio?.toFixed ? prov.precio.toFixed(2) : prov.precio}
-                                            </p>
-                                            <button 
-                                                type="button" 
-                                                class="btn btn-checkout btn-sm" 
-                                                on:click={() => cotizar({ 
-                                                    idProducto: product.idProducto, 
-                                                    name: product.nombreProducto, 
-                                                    price: prov.precio, 
-                                                    proveedor: { idProveedor: prov.idProveedor, nombreProveedor: prov.nombreProveedor } 
-                                                })}
-                                            >
-                                                Agregar Producto
-                                            </button>
-                                        </div>
-                                    </div>
-                                {/each}
+                                    {/each}
+                                </div>
                             </div>
                         {:else}
-                            <p class="text-danger my-2 fw-semibold mt-auto">Sin proveedores o stock disponible.</p>
+                            <p class="text-danger my-2 fw-semibold mt-auto">Sin stock disponible.</p>
                         {/if}
 
-                        <div class="mt-auto d-flex gap-2 justify-content-between align-items-center pt-2">
+                        <div class="card-footer-action">
                             <button
                                 type="button"
-                                class="btn btn-outline-primary btn-sm flex-grow-1"
+                                class="btn-toggle-details"
                                 on:click={() => toggleExpand(product)}
                                 aria-expanded={expanded.has(getId(product))}
                             >
-                                {#if expanded.has(getId(product))}Ver menos{:else}Ver más{/if}
+                                {#if expanded.has(getId(product))}
+                                    <span class="icon">▲</span> Ver menos detalles
+                                {:else}
+                                    <span class="icon">▼</span> Ver más detalles
+                                {/if}
                             </button>
-                            </div>
-
+                        </div>
+                        
                         {#if expanded.has(getId(product))}
-                            <div class="card-details mt-2 border-top pt-2">
-                                <p class="mb-1"><strong>Concentración:</strong> {product.concentracion}</p>
-                                <p class="mb-1"><strong>Forma Farmacéutica:</strong> {product.formaFarmaceutica}</p>
-                                <p class="mb-1"><strong>Registro Sanitario:</strong> {product.registroSanitario}</p>
-                                <p class="mb-1"><strong>Condiciones Almacenamiento:</strong> {product.condicionesAlmacenamiento}</p>
-                                </div>
+                            <div class="expanded-details">
+                                <p class="detail-item"><strong>Concentración:</strong> {product.concentracion}</p>
+                                <p class="detail-item"><strong>Forma Farmacéutica:</strong> {product.formaFarmaceutica}</p>
+                                <p class="detail-item"><strong>Registro Sanitario:</strong> {product.registroSanitario}</p>
+                                <p class="detail-item"><strong>Almacenamiento:</strong> {product.condicionesAlmacenamiento}</p>
+                            </div>
                         {/if}
                     </div>
                 </div>
-            </div>
-        {/if}
+            {/if}
         {/each}
     </div>
 {/if}

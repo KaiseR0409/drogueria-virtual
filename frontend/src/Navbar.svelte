@@ -62,7 +62,8 @@
                         {#if tipoUsuario === "Administrador"}
                             <li class="nav-item">
                                 <a class="nav-link text-light" href="#/admin"
-                                    >Administra usuarios!
+                                    >
+                                    <button class="btn btn-warning">Administra usuarios</button>
                                 </a>
                             </li>
                         {:else if tipoUsuario === "Proveedor"}
@@ -79,17 +80,7 @@
                         {/if}
                     {/if}            
                 </ul>
-                <form class="d-flex">
-                    <input
-                        class="form-control me-2"
-                        type="search"
-                        placeholder="¿Buscas algo? ..."
-                        aria-label="Search"
-                    />
-                    <button class="btn btn-outline-light" type="submit"
-                        >Buscar</button
-                    >
-                </form>
+                
                 {#if token}
                     <!-- Si hay token -->
                     <button on:click={logout} class="btn btn-logout">

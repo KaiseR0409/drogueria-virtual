@@ -1,89 +1,89 @@
 <script>
     import { onMount, onDestroy } from "svelte";
-    import ProductModal from "./ProductModal.svelte";
+    import ProductModal from "./ProductModal.svelte"; // Componente ProductModal
+
     // Estado reactivo de los productos
     let productos = [];
     let loading = true;
-    let isModalOpen = false;
-    let selectedProduct = null; // Producto seleccionado para editar
-    let _popstateHandler = null;
     let fetchError = null;
 
+    // Estado del modal y producto seleccionado
+    let isModalOpen = false;
+    let selectedProduct = null; // Producto seleccionado para editar/crear
+    let _popstateHandler = null; // Manejador de historial para cerrar modal
+
+    // Variables de Filtro
+    let filtroNombre = "";
+    let filtroID = "";
+    let filtroStock = "";
+    
+    // ⚙️ Lógica de Paginación
+    const itemsPerPage = 8; // Filas por página
+    let currentPage = 1;
+
+    // --- Funciones de Lógica ---
+
+    // Función principal para obtener datos
     function fetchProductos() {
         loading = true;
         fetchError = null;
         const idProveedor = localStorage.getItem("idProveedor");
 
         if (!idProveedor) {
-            alert("No se encontró al proveedor, por favor inicie sesion.");
+            fetchError = "No se encontró al proveedor. Por favor, inicie sesión.";
             loading = false;
             return;
         }
+        
+        // Llamada a la API
         fetch(`http://localhost:5029/api/proveedor/${idProveedor}/productos`)
-            .then((res) => res.json())
+            .then((res) => {
+                if (!res.ok) throw new Error(`Error al cargar: ${res.status}`);
+                return res.json();
+            })
             .then((data) => {
                 productos = data;
                 loading = false;
             })
             .catch((err) => {
                 console.error("Error al cargar productos:", err);
+                fetchError = "Error al obtener productos del servidor.";
                 loading = false;
             });
     }
 
-    function obtenerClaseStock(stock) {
-        if (stock <= 30) {
-            return "stock-bajo"; // Rojo: Menor o igual a 30
-        } else if (stock >= 31 && stock <= 80) {
-            return "stock-medio"; // Naranja/Amarillo: 31 a 80
-        } else {
-            return "stock-alto"; // Verde: Mayor o igual a 81
-        }
-    }
-
-    function agregarProducto() {
-        console.log("agregarProducto llamado"); // debug
-        selectedProduct = null; // Modo Creación
+    // Manejadores del Modal y navegación
+    function openModal(product = null) {
+        selectedProduct = product; // null para crear, objeto para editar
         isModalOpen = true;
-        console.log("isModalOpen ->", isModalOpen); // debug
-        // Abrir como pantalla completa y añadir entrada al historial
-        isModalOpen = true;
+        // Lógica de historial para navegación tipo pantalla completa
         history.pushState({ productScreen: true }, "", "#producto");
         _popstateHandler = () => {
-            isModalOpen = false;
-            selectedProduct = null;
+            handleClose(false); // No refrescar si es solo el popstate
             window.removeEventListener("popstate", _popstateHandler);
             _popstateHandler = null;
         };
         window.addEventListener("popstate", _popstateHandler);
-        console.log("isModalOpen ->", isModalOpen); // debug
     }
-    function handleClose() {
+    
+    function handleClose(shouldGoBack = true) {
         isModalOpen = false;
-        fetchProductos(); // Refresca la lista tras cerrar el modal
-        // Si abrimos vía pushState, retrocedemos para activar popstate y restaurar URL
-        if (_popstateHandler) {
+        // Refresca la lista tras cerrar el modal
+        fetchProductos(); 
+        
+        // Si no se cerró con el botón 'atrás' del navegador
+        if (_popstateHandler && shouldGoBack) {
             window.removeEventListener("popstate", _popstateHandler);
             _popstateHandler = null;
-            history.back();
-        } else {
-            isModalOpen = false;
+            history.back(); // Vuelve atrás para limpiar el #producto de la URL
         }
-        fetchProductos(); // Refresca la lista tras cerrar la pantalla
     }
 
-    onDestroy(() => {
-        if (_popstateHandler) {
-            window.removeEventListener("popstate", _popstateHandler);
-            _popstateHandler = null;
-        }
-    });
-
-    function handleCreate() {
-        selectedProduct = null;
-        isModalOpen = true;
+    // Funciones de acción
+    function handleEdit(inv) {
+        openModal(inv);
     }
-    //borrar productos
+    
     async function handleDelete(idProducto) {
         if (confirm("¿Está seguro de eliminar este producto?")) {
             const idProveedor = localStorage.getItem("idProveedor");
@@ -108,57 +108,74 @@
             }
         }
     }
-    function handleEdit(e) {
-        selectedProduct = e;
-        isModalOpen = true;
-        console.log("Editing product:", selectedProduct);
-    }
-    function handleSuccess() {
-        isModalOpen = false;
-        fetchProductos(); // Refresca la lista tras cerrar el modal
-    }
+    
+    // --- Lógica de Filtro y Paginación ---
 
+    // 1. Filtrado Reactivo
+    $: productosFiltrados = productos
+        .filter(p => {
+            const nombre = p.producto?.nombreProducto?.toLowerCase() || '';
+            const id = p.producto?.idProducto?.toString() || '';
+            const stock = p.stock?.toString() || '';
+
+            const cumpleNombre = nombre.includes(filtroNombre.toLowerCase());
+            const cumpleID = id.includes(filtroID);
+            const cumpleStock = stock.includes(filtroStock);
+
+            return cumpleNombre && cumpleID && cumpleStock;
+        })
+        .sort((a, b) => (a.producto.nombreProducto || '').localeCompare(b.producto.nombreProducto || '')); // Ordenar alfabéticamente por nombre
+    
+    // 2. Paginación Reactiva
+    $: totalPages = Math.ceil(productosFiltrados.length / itemsPerPage);
+    $: startIndex = (currentPage - 1) * itemsPerPage;
+    $: endIndex = startIndex + itemsPerPage;
+    $: productosPaginados = productosFiltrados.slice(startIndex, endIndex);
+
+    // 3. Resetear la página al filtrar
+    $: productosFiltrados, (currentPage = 1);
+
+    function goToPage(page) {
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+        }
+    }
+    
+    // --- Ciclo de Vida ---
     onMount(() => {
         fetchProductos();
     });
+
+    onDestroy(() => {
+        if (_popstateHandler) {
+            window.removeEventListener("popstate", _popstateHandler);
+            _popstateHandler = null;
+        }
+    });
 </script>
+
 
 {#if isModalOpen}
     <div class="modal-overlay">
-        <div
-            class="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Formulario de producto"
-        >
+        <div class="modal" role="dialog" aria-modal="true" aria-label="Formulario de producto">
             <div class="modal-header">
                 <h3 class="modal-title">
-                    {selectedProduct
-                        ? "Editar Producto"
-                        : "Publicar Nuevo Producto"}
+                    {selectedProduct ? "Editar Producto" : "Publicar Nuevo Producto"}
                 </h3>
                 <button
                     class="modal-close"
                     type="button"
-                    on:click={handleClose}
-                    aria-label="Cerrar">×</button
-                >
+                    on:click={() => handleClose(true)}
+                    aria-label="Cerrar"
+                >&times;</button>
             </div>
 
             <div class="modal-body">
                 <ProductModal
                     product={selectedProduct}
-                    sucess={handleSuccess}
-                    close={handleClose}
+                    sucess={fetchProductos}
+                    close={() => handleClose(true)}
                 />
-            </div>
-
-            <div class="modal-actions">
-                <button
-                    class="btn btn-cancel"
-                    type="button"
-                    on:click={handleClose}>Cancelar</button
-                >
             </div>
         </div>
     </div>
@@ -169,52 +186,71 @@
         <h1>Inventario de Productos Farmacéuticos</h1>
         <button
             type="button"
-            on:click={agregarProducto}
+            on:click={() => openModal(null)}
             class="btn btn-primary"
         >
             + Agregar Producto Nuevo
         </button>
     </div>
+    
+    <div class="filtros-card">
+        <p class="filtros-titulo">Buscar y Filtrar Productos</p>
+        <div class="controles-grid-productos">
+            <input
+                type="text"
+                placeholder="🔍 Nombre del Producto"
+                bind:value={filtroNombre}
+                class="form-control control-filtro"
+            />
+            <input
+                type="text"
+                placeholder="🔍 ID"
+                bind:value={filtroID}
+                class="form-control control-filtro"
+            />
+            <input
+                type="text"
+                placeholder="🔍 Stock"
+                bind:value={filtroStock}
+                class="form-control control-filtro"
+            />
+        </div>
+    </div>
 
     {#if loading}
-        <div class="spinner-border" role="status">
-            <span class="sr-only"></span>
-        </div>
         <p class="loading-state">Cargando inventario...</p>
-    {:else if productos.length === 0}
+    {:else if fetchError}
+        <p class="error-message">⚠️ {fetchError}</p>
+    {:else if productosFiltrados.length === 0}
         <p class="empty-state">
-            No hay productos en su inventario. ¡Agregue el primero!
+            No hay productos que coincidan con los filtros.
         </p>
     {:else}
-        <div class="table-wrapper">
-            <table>
-                <thead>
+        <div class="tabla-wrapper">
+            <table class="tabla-usuarios"> <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Descripción</th>
-                        <th>Precio</th>
-                        <th>Stock</th>
-                        <th>Acciones</th>
+                        <th style="width: 5%;">ID</th>
+                        <th style="width: 25%;">NOMBRE</th>
+                        <th style="width: 30%;">DESCRIPCIÓN</th>
+                        <th style="width: 10%;">PRECIO</th>
+                        <th style="width: 10%;">STOCK</th>
+                        <th style="width: 10%;">ACCIONES</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {#each productos as inv (inv.idProducto)}
+                    {#each productosPaginados as inv (inv.producto.idProducto)}
                         <tr>
                             <td>{inv.producto.idProducto}</td>
-                            <td class="product-name"
-                                >{inv.producto.nombreProducto}</td
-                            >
-                            <td class="product-desc"
-                                >{inv.producto.principioActivo} - {inv.producto
-                                    .presentacionComercial}</td
-                            >
+                            <td class="product-name">{inv.producto.nombreProducto}</td>
+                            <td class="product-desc">
+                                {inv.producto.principioActivo} - {inv.producto.presentacionComercial}
+                            </td>
                             <td>${inv.precio.toFixed(2)}</td>
                             <td>
-                                <span 
+                                <span class="badge" 
                                     class:stock-bajo={inv.stock <= 30}
                                     class:stock-medio={inv.stock >= 31 && inv.stock <= 80}
-                                    class:stock-alto={inv.stock >= 81}
+                                    class:stock-alto={inv.stock > 80}
                                 >
                                     {inv.stock}
                                 </span>
@@ -224,20 +260,41 @@
                                     on:click={() => handleEdit(inv)}
                                     class="btn btn-icon btn-edit"
                                 >
-                                    &#9998;
-                                </button>
+                                    &#9998; </button>
                                 <button
-                                    on:click={() =>
-                                        handleDelete(inv.producto.idProducto)}
+                                    on:click={() => handleDelete(inv.producto.idProducto)}
                                     class="btn btn-icon btn-delete"
                                 >
-                                    &times;
-                                </button>
+                                    &times; </button>
                             </td>
                         </tr>
                     {/each}
                 </tbody>
             </table>
         </div>
+
+        {#if totalPages > 1}
+            <div class="pagination-controls">
+                <button
+                    class="btn btn-secondary btn-pagination"
+                    on:click={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                >
+                    &laquo; Anterior
+                </button>
+
+                <span class="page-info">
+                    Página {currentPage} de {totalPages}
+                </span>
+
+                <button
+                    class="btn btn-secondary btn-pagination"
+                    on:click={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                >
+                    Siguiente &raquo;
+                </button>
+            </div>
+        {/if}
     {/if}
 </div>
