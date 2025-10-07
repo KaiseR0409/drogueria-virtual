@@ -1,47 +1,127 @@
 <script>
-    import ComprobanteCliente from "./ComprobanteCliente.svelte";
-    import { jsPDF } from "jspdf";
+    import { onMount } from 'svelte';
     import { get } from "svelte/store";
-    // Asumiendo que estos stores están definidos correctamente
+    import ComprobanteCliente from "./ComprobanteCliente.svelte";
     import { cart, subtotal, totalItems } from "./stores.js"; 
+    
 
     let ordenesConfirmadas = [];
     let mostrarComprobante = false;
-    let confirmacionExitosa = false;
-    let isProcessing = false; // Estado para deshabilitar el botón durante la compra
+    let isProcessing = false; 
+
+
+    let mostrarModalDireccion = false;
+    let selectedAddressKey = ''; // Clave de la dirección seleccionada (e.g., 'Direccion1')
+    
+
+    let userAddresses = []; 
+    let isLoadingAddresses = true; 
+    let addressFetchError = false; 
     
     // token e idUsuario desde localStorage
     const token = localStorage.getItem("token");
     const idUsuario = localStorage.getItem("idUsuario");
+    
+    // --- Funciones Auxiliares ---
 
     // Función auxiliar para obtener el nombre del proveedor
     function getProveedorName(item) {
-        return item.proveedor?.nombreProveedor ?? item.nombreProveedor ?? "Proveedor desconocido";
+        return item.proveedor?.nombreProveedor ?? item.nombreProducto ?? "Proveedor desconocido";
     }
 
-    // Función auxiliar para calcular el precio total del item
+
     function getItemPrice(item) {
         const price = item.price ?? item.precioUnitario ?? 0;
         const quantity = item.quantity ?? item.cantidad ?? 1;
         return (price * quantity).toFixed(2);
     }
-
-    // Función de la lógica de negocio (sin cambios importantes en la funcionalidad)
-    async function finalizarCompra() {
-        if (isProcessing) return; 
-        
-        const carrito = get(cart);
-
-        if (!carrito || carrito.length === 0) {
-            alert("El carrito está vacío.");
+    
+    
+    onMount(async () => {
+        if (!idUsuario) {
+            isLoadingAddresses = false;
+            addressFetchError = true;
             return;
         }
 
+        try {
+
+            const res = await fetch(`http://localhost:5029/api/usuario/${idUsuario}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                const loadedAddresses = [];
+                
+                if (data.direccion1 && data.direccion1.trim() !== "") {
+                    loadedAddresses.push({ key: 'Direccion1', label: data.direccion1, value: data.direccion1});
+                }
+                if (data.direccion2 && data.direccion2.trim() !== "") {
+                    loadedAddresses.push({ key: 'Direccion2', label:  data.direccion2, value: data.direccion2 });
+                }
+                if (data.direccion3 && data.direccion3.trim() !== "") {
+                    loadedAddresses.push({ key: 'Direccion3', label: data.direccion3, value: data.direccion3});
+                }
+
+                userAddresses = loadedAddresses;
+                
+                // Establecer la primera como predeterminada
+                if (userAddresses.length > 0) {
+                    selectedAddressKey = userAddresses[0].key;
+                }
+            } else {
+                addressFetchError = true;
+            }
+        } catch (error) {
+            addressFetchError = true;
+        } finally {
+            isLoadingAddresses = false;
+        }
+    });
+
+    // --- Funciones de Flujo de Compra ---
+    
+    // Paso 1: Abrir el modal de selección y validación
+    function iniciarCompra() {
+        if (isProcessing || get(cart).length === 0) return;
+
+        if (isLoadingAddresses) {
+            alert("Aún estamos cargando sus direcciones. Por favor, espere.");
+            return;
+        }
+        
+        if (addressFetchError || userAddresses.length === 0) {
+            alert("No tiene direcciones de envío válidas. Añada al menos una a su perfil.");
+            return;
+        }
+        
+        mostrarModalDireccion = true; 
+    }
+    
+
+    async function finalizarCompra() {
+        if (isProcessing) return; 
+
+        const selectedAddress = userAddresses.find(addr => addr.key === selectedAddressKey);
+        if (!selectedAddress) {
+            alert("Debe seleccionar una dirección válida.");
+            return;
+        }
+        const direccionSeleccionada = selectedAddress.label;
+        
+        const carrito = get(cart);
+
+        if (!carrito || carrito.length === 0) return;
+
         isProcessing = true;
         ordenesConfirmadas = [];
+        let confirmacionGeneralExitosa = false;
         const resultados = []; 
 
-        // 1. Agrupar por idProveedor
         const grupos = carrito.reduce((acc, item) => {
             const prov =
                 item.idProveedor ??
@@ -49,10 +129,7 @@
                 item.proveedor?.id ??
                 null;
 
-            if (prov == null) {
-                console.warn("Item sin idProveedor detectado:", item);
-                return acc;
-            }
+            if (prov == null) return acc;
 
             const key = String(prov);
             if (!acc[key]) acc[key] = [];
@@ -60,12 +137,7 @@
             return acc;
         }, {});
 
-        // 2. Crear órdenes en la API
         for (const [idProveedor, itemsProveedor] of Object.entries(grupos)) {
-            // ... (Lógica de construcción de ordenRequest y fetch POST a /api/orden) ...
-            // (Tu lógica actual de creación de orden va aquí, solo por brevedad la omito en este bloque)
-            
-            // --- INICIO: Tu lógica de `ordenRequest` y `fetch` a la API ---
             const items = itemsProveedor.map((i) => ({
                 idProducto: i.idProducto ?? i.id ?? 0,
                 cantidad: Number(i.quantity ?? i.cantidad ?? 1),
@@ -91,6 +163,7 @@
                 impuestos: 0,
                 descuento: 0,
                 items,
+                DireccionEnvioCompleta: direccionSeleccionada
             };
 
             try {
@@ -102,6 +175,7 @@
                     },
                     body: JSON.stringify(ordenRequest),
                 });
+                
 
                 if (!res.ok) {
                     const text = await res.text();
@@ -114,12 +188,10 @@
             } catch (err) {
                 resultados.push({ idProveedor, ok: false, error: err.message });
             }
-            // --- FIN: Tu lógica de creación de orden ---
         }
 
-        // 3. Confirmación de Pago y Descuento de Stock
         const algunFallo = resultados.some((r) => !r.ok);
-        confirmacionExitosa = true; // Asumir éxito inicial
+        confirmacionGeneralExitosa = true; 
 
         if (!algunFallo) {
             for (const orden of ordenesConfirmadas) {
@@ -143,22 +215,17 @@
                         },
                         body: JSON.stringify(pagoRequest),
                     });
-
+                    
                     if (!resPago.ok) {
-                        console.error(`Fallo al confirmar pago/descontar stock para Orden ${orden.idOrden}`);
-                        confirmacionExitosa = false;
-                        // Opcional: Podrías romper el bucle o seguir intentando
+                        confirmacionGeneralExitosa = false;
                     }
                 } catch (err) {
-                    console.error(`Fetch error al confirmar pago para Orden ${orden.idOrden}:`, err);
-                    confirmacionExitosa = false;
+                    confirmacionGeneralExitosa = false;
                 }
             }
             
-            // 4. Resultado Final
-            if (confirmacionExitosa) {
-              console.log("ordenes generadas: ", ordenesConfirmadas);
-              
+            if (confirmacionGeneralExitosa) {
+                
                 cart.set([]); // limpiar carrito solo si todo OK
                 mostrarComprobante = true; // mostrar comprobante
             } else {
@@ -210,15 +277,70 @@
         </div>
 
         <button
-            on:click={finalizarCompra}
-            class="btn btn-checkout"
-            disabled={isProcessing}
+            on:click={iniciarCompra} class="btn btn-checkout"
+            disabled={isProcessing || $totalItems === 0 || isLoadingAddresses || addressFetchError}
         >
-            {isProcessing ? 'Procesando Compra...' : 'Pagar y Finalizar Compra'}
+            {#if isLoadingAddresses}
+                Cargando Direcciones...
+            {:else if isProcessing}
+                Procesando Compra...
+            {:else if addressFetchError}
+                Error al Cargar Direcciones
+            {:else}
+                Pagar y Finalizar Compra
+            {/if}
         </button>
     {:else}
         <div class="cart-empty">
             <p>El carrito está vacío.</p>
+        </div>
+    {/if}
+
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+     <!-- svelte-ignore a11y_click_events_have_key_events -->
+    {#if mostrarModalDireccion}
+        
+        <div class="modal-overlay" on:click={() => (mostrarModalDireccion = false)}>
+            <div class="address-modal-content" on:click|stopPropagation>
+                
+                <div class="modal-header-elegant">
+                    <h3 class="modal-title">Selección de Dirección de Envío</h3>
+                    <button class="close-btn" on:click={() => (mostrarModalDireccion = false)}>&times;</button>
+                </div>
+
+                <div class="modal-body-content">
+                    {#if userAddresses.length > 0}
+                        <h4>Direcciones disponibles ({userAddresses.length})</h4>
+                        <label for="address-select">Selecciona dónde quieres recibir tu pedido:</label>
+                        
+                        <select id="address-select" bind:value={selectedAddressKey} class="address-select-box">
+                            {#each userAddresses as addr}
+                                <option value={addr.key}>{addr.label}</option>
+                            {/each}
+                        </select>
+                    {:else}
+                        <p class="no-address"> No tienes direcciones de envío configuradas.</p>
+                    {/if}
+                </div>
+
+                <div class="modal-footer-action">
+                    <button class="btn btn-cancel" on:click={() => (mostrarModalDireccion = false)} disabled={isProcessing}>Cancelar</button>
+                    <button 
+                        class="btn btn-primary-confirm" 
+                        on:click={() => {
+                            mostrarModalDireccion = false; // Cierra el modal
+                            finalizarCompra(); // Ejecuta la compra con la dirección seleccionada
+                        }} 
+                        disabled={isProcessing || userAddresses.length === 0}
+                    >
+                        {#if isProcessing}
+                            Procesando Pago...
+                        {:else}
+                            Continuar y Pagar
+                        {/if}
+                    </button>
+                </div>
+            </div>
         </div>
     {/if}
 
@@ -229,4 +351,5 @@
         />
     {/if}
 </div>
+
 
