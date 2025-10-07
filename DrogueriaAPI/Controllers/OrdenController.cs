@@ -41,7 +41,8 @@ namespace DrogueriaAPI.Controllers
                 MetodoPago = request.MetodoPago,
                 Moneda = request.Moneda,
                 Impuestos = request.Impuestos,
-                Descuento = request.Descuento
+                Descuento = request.Descuento,
+                DireccionEnvioCompleta = request.DireccionEnvioCompleta,
             };
 
             _context.Ordenes.Add(orden);

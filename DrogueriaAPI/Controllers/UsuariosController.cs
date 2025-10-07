@@ -141,7 +141,31 @@ namespace DrogueriaAPI.Controllers
                 return BadRequest();
             }
 
+            // Encontrar el usuario existente en la base de datos
+            var usuarioExistente = await _context.Usuarios.AsNoTracking().FirstOrDefaultAsync(u => u.IdUsuario == id);
+
+            if (usuarioExistente == null)
+            {
+                return NotFound();
+            }
+
+            //Verificar si se proporcionó un nuevo password
+            if (!string.IsNullOrWhiteSpace(usuario.Password))
+            {
+                //Encriptar la nueva contraseña
+                usuario.Password = BCrypt.Net.BCrypt.HashPassword(usuario.Password);
+            }
+            else
+            {
+                //Si el password está vacío en la entrada (como debería estar si no se cambia),
+                
+                usuario.Password = usuarioExistente.Password;
+            }
+
+            //Establecer la fecha de actualización
             usuario.FechaActualizacion = DateTime.Now;
+
+            // Marcar el objeto actualizado para guardado
             _context.Entry(usuario).State = EntityState.Modified;
 
             try
@@ -183,6 +207,7 @@ namespace DrogueriaAPI.Controllers
         {
             return _context.Usuarios.Any(e => e.IdUsuario == id);
         }
+
         
     }
 }

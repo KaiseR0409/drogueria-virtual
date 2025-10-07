@@ -7,6 +7,9 @@ public class Orden
 {
     [Key]
     public int IdOrden { get; set; }
+    [MaxLength(500)]
+    public string? DireccionEnvioCompleta { get; set; }
+
 
     // Relación con el comprador
     public int IdUsuario { get; set; }

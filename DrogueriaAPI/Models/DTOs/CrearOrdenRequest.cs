@@ -14,6 +14,7 @@
         public string Moneda { get; set; }
         public decimal Impuestos { get; set; }
         public decimal Descuento { get; set; }
+        public string DireccionEnvioCompleta { get; set; }
 
         // Items
         public List<ItemOrdenRequest> Items { get; set; }

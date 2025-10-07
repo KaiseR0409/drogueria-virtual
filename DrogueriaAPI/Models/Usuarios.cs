@@ -9,7 +9,7 @@ namespace DrogueriaAPI.Models
         public int IdUsuario { get; set; }
         public string NombreUsuario { get; set; }      // Nombre completo
         public string Usuario { get; set; }           // Nombre de login
-        public string Password { get; set; }
+        public string? Password { get; set;}
         public string TipoUsuario { get; set; }       // Cliente / Proveedor / Administrador
 
         public DateTime FechaCreacion { get; set; }
