@@ -280,4 +280,63 @@ public class ProveedorProductoController : ControllerBase
 
         return Ok(inventarioCompleto);
     }
+    //GET: api/ProveedorProducto/BuscarSimilares
+    [HttpGet("BuscarSimilares")]
+    public async Task<ActionResult<IEnumerable<object>>> BuscarSimilares(
+        [FromQuery] string? nombreProducto,
+        [FromQuery] string? principioActivo,
+        [FromQuery] int? idProductoExcluir = null)
+    {
+        var query = _context.ProveedorProducto
+            .Include(pp => pp.Producto)
+            .Include(pp => pp.Proveedor)
+            .Where(pp => pp.Stock > 0)
+            .AsQueryable();
+
+        //lógica de similitud por Nombre o Principio Activo
+        if (!string.IsNullOrWhiteSpace(nombreProducto))
+        {
+            query = query.Where(pp => pp.Producto.NombreProducto.ToLower().Contains(nombreProducto.ToLower()));
+        }
+        else if (!string.IsNullOrWhiteSpace(principioActivo))
+        {
+            query = query.Where(pp => pp.Producto.PrincipioActivo.ToLower().Contains(principioActivo.ToLower()));
+        }
+        else
+        {
+            return Ok(new List<object>());
+        }
+
+        // excluir el ID del producto que abrió el modal
+        if (idProductoExcluir.HasValue)
+        {
+            query = query.Where(pp => pp.IdProducto != idProductoExcluir.Value);
+        }
+
+        // ejecutar la Consulta
+        var productosSimilares = await query
+            .OrderByDescending(pp =>
+                !string.IsNullOrWhiteSpace(nombreProducto)
+                ? pp.Producto.NombreProducto.ToLower().StartsWith(nombreProducto.ToLower())
+                : !string.IsNullOrWhiteSpace(principioActivo)
+                    ? pp.Producto.PrincipioActivo.ToLower().StartsWith(principioActivo.ToLower())
+                    : false 
+            )
+            .ThenBy(pp => pp.Precio) 
+            .Take(50)
+            .ToListAsync();
+
+        // mapear la respuesta al formato simple que necesita Svelte
+        var resultado = productosSimilares.Select(pp => new
+        {
+            IdProducto = pp.IdProducto,
+            IdProveedor = pp.IdProveedor,
+            NombreProducto = pp.Producto.NombreProducto,
+            Precio = pp.Precio,
+            Stock = pp.Stock,
+            NombreProveedor = pp.Proveedor.NombreProveedor,
+        }).ToList();
+
+        return Ok(resultado);
+    }
 }
