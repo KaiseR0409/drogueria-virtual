@@ -1814,3 +1814,128 @@ button:disabled,
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/*--- productos similares ---*/
+.similar-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 10px;
+  background-color: #fcfcfc;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: box-shadow 0.2s;
+  height: 100%;
+}
+
+.similar-card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.similar-name {
+  font-size: 1em;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 5px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.provider-name {
+  font-size: 0.85em;
+  color: #777;
+  margin-bottom: 8px;
+}
+
+.similar-details {
+  margin-bottom: 10px;
+}
+
+.similar-meta {
+  margin: 2px 0;
+  font-size: 0.9em;
+}
+
+.price-value strong {
+  color: #D32F2F;
+}
+
+.stock-value {
+  color: #388e3c;
+  font-weight: 600;
+}
+
+.stock-value.low-stock {
+  color: #ff9800;
+}
+
+.action-group {
+  display: flex;
+  gap: 5px;
+  margin-top: auto;
+}
+
+.quantity-input {
+  width: 60px;
+  padding: 5px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  -moz-appearance: textfield;
+}
+
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.btn-add-similar {
+  flex-grow: 1;
+  background-color: #5d1515;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.btn-add-similar:hover:not(:disabled) {
+  background-color: #791c1c;
+}
+
+.btn-add-similar:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/*--- modal de productos similares ---*/
+.cotizacion-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.cotizacion-modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 95%;
+  max-width: 1200px;
+  max-height: 95%;
+  display: flex;
+  flex-direction: column;
+}
+
