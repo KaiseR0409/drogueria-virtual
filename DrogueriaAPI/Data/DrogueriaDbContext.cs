@@ -41,7 +41,8 @@ namespace DrogueriaAPI.Data
                 modelBuilder.Entity<Usuarios>()
                     .HasOne(usuario => usuario.Proveedor)       // Un Usuario tiene (opcionalmente) un Proveedor
                     .WithOne(proveedor => proveedor.Usuario)      // Un Proveedor está asociado a un único Usuario
-                    .HasForeignKey<Proveedor>(proveedor => proveedor.IdProveedor); // La clave foránea está en la tabla Proveedor y es la columna IdProveedor
+                    .HasForeignKey<Proveedor>(proveedor => proveedor.IdProveedor)
+                    .OnDelete(DeleteBehavior.Cascade); // La clave foránea está en la tabla Proveedor y es la columna IdProveedor
 
             
 
@@ -53,12 +54,14 @@ namespace DrogueriaAPI.Data
                 modelBuilder.Entity<ProveedorProducto>()
                     .HasOne(pp => pp.Proveedor)
                     .WithMany()
-                    .HasForeignKey(pp => pp.IdProveedor);
+                    .HasForeignKey(pp => pp.IdProveedor)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 modelBuilder.Entity<ProveedorProducto>()
                     .HasOne(pp => pp.Producto)
                     .WithMany()
-                    .HasForeignKey(pp => pp.IdProducto);
+                    .HasForeignKey(pp => pp.IdProducto)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 modelBuilder.Entity<ItemOrden>()
                     .HasOne(io => io.Producto)

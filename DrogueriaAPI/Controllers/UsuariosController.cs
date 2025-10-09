@@ -121,15 +121,37 @@ namespace DrogueriaAPI.Controllers
             usuario.FechaCreacion = DateTime.Now;
             usuario.FechaActualizacion = DateTime.Now; 
             usuario.Password = BCrypt.Net.BCrypt.HashPassword(usuario.Password);
-            usuario.EstadoUsuario = "Inactivo";
+            
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-           
+            try
+            {
+                //Guardar en DB
+                _context.Usuarios.Add(usuario);
+                await _context.SaveChangesAsync();
 
-            //Guardar en DB
-            _context.Usuarios.Add(usuario);
-            await _context.SaveChangesAsync();
+                if (usuario.TipoUsuario == "Proveedor")
+                {
+                    var nuevoProveedor = new Proveedor
+                    {
+                        IdProveedor = usuario.IdUsuario, 
+                        NombreProveedor = usuario.NombreUsuario,
+                        
+                    };
 
-            return Ok(usuario);
+                    _context.Proveedor.Add(nuevoProveedor);
+                    await _context.SaveChangesAsync();
+                }
+                await transaction.CommitAsync();
+                return Ok(usuario);
+
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, "Ocurrió un error al crear el usuario: " + ex.Message);
+            }
+
         }
 
         // PUT: api/usuario/5
@@ -198,9 +220,42 @@ namespace DrogueriaAPI.Controllers
             }
 
             _context.Usuarios.Remove(usuario);
-            await _context.SaveChangesAsync();
+            try
+            {
+                // Ejecutar el borrado en cascada (Usuario -> Proveedor -> ProveedorProducto)
+                await _context.SaveChangesAsync();
 
-            return NoContent();
+                // Limpiar Productos Huérfanos
+                await CleanUpOrphanProductsAsync(); 
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al eliminar el usuario: {ex.Message}");
+            }
+        }
+
+
+        private async Task CleanUpOrphanProductsAsync()
+        {
+            // Encuentra todos los IDs de Productos que NO tienen ninguna entrada en la tabla ProveedorProducto
+            var orphanProductIds = await _context.Productos
+                .Where(p => !_context.ProveedorProducto.Any(pp => pp.IdProducto == p.IdProducto))
+                .Select(p => p.IdProducto)
+                .ToListAsync();
+
+            if (orphanProductIds.Any())
+            {
+                var orphanProducts = await _context.Productos
+                    .Where(p => orphanProductIds.Contains(p.IdProducto))
+                    .ToListAsync();
+
+                _context.Productos.RemoveRange(orphanProducts);
+
+
+                await _context.SaveChangesAsync();
+            }
         }
 
         private bool UsuarioExists(int id)
