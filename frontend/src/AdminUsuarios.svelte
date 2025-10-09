@@ -6,9 +6,9 @@
     // Variables de estado del Modal de Edición
     let mostrarModal = false;
     let usuarioAEditar = {}; // Objeto que contendrá los datos del usuario seleccionado
-    
+
     //NUEVA VARIABLE PARA LA CONTRASEÑA
-    let nuevaContrasena = ""; 
+    let nuevaContrasena = "";
 
     // Variables de filtro
     let filtroNombre = "";
@@ -126,7 +126,7 @@
                     body: JSON.stringify(datosAEnviar),
                 },
             );
-           
+
             if (!res.ok) throw new Error("Error al actualizar usuario");
 
             mensajeModal = {
@@ -204,7 +204,9 @@
 <div class="dashboard-container">
     <div class="header">
         <h2>👤 Administración de Usuarios</h2>
-        <a href="#/agregar-usuario" class="btn btn-principal">➕ Agregar Usuario</a>
+        <a href="#/agregar-usuario" class="btn btn-principal"
+            >➕ Agregar Usuario</a
+        >
     </div>
 
     <div class="filtros-card">
@@ -271,8 +273,10 @@
                             <td>{u.tipoEstablecimiento}</td>
                             <td class="direccion-celda">
                                 {u.direccion1 || "Sin Dirección"}
-                                {#if u.direccion2} / {u.direccion2}{/if}
-                                {#if u.direccion3} / {u.direccion3}{/if}
+                                {#if u.direccion2}
+                                    / {u.direccion2}{/if}
+                                {#if u.direccion3}
+                                    / {u.direccion3}{/if}
                             </td>
                             <td>
                                 <button
@@ -367,17 +371,19 @@
                             required
                         />
                     </div>
-                    
+
                     <div class="form-group mb-3">
-                        <label for="nuevaContrasena">Nueva Contraseña (Dejar vacío para no cambiar)</label>
-                        <input 
-                            id="nuevaContrasena" 
-                            type="password" 
-                            class="form-control" 
+                        <label for="nuevaContrasena"
+                            >Nueva Contraseña (Dejar vacío para no cambiar)</label
+                        >
+                        <input
+                            id="nuevaContrasena"
+                            type="password"
+                            class="form-control"
                             bind:value={nuevaContrasena}
                             placeholder="Ingrese nueva contraseña aquí"
                             style="border: 1px solid gray;"
-                        >
+                        />
                     </div>
                     <div class="form-group mb-3">
                         <label for="tipoUsuario">Tipo de Usuario</label>
@@ -402,7 +408,8 @@
                             class="form-control"
                             maxlength="12"
                             bind:value={usuarioAEditar.telefono}
-                            style="border: 1px solid gray;"/>
+                            style="border: 1px solid gray;"
+                        />
                     </div>
 
                     <div class="form-group mb-3">

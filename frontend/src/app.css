@@ -34,9 +34,9 @@ h1 {
 
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: 100%;
+  margin: 0 ;
+  padding: 0;
 }
 
 .icono-nav {
@@ -116,15 +116,33 @@ h1 {
 .home-grid {
 
   display: grid;
-  grid-template-columns: minmax(200px, 1.2fr) 3fr minmax(200px, 1.2fr);
+  grid-template-columns: 280px 1fr 320px;
   gap: 20px;
   /* Separación entre columnas */
-  max-width: 1280px;
+  max-width: 1400px;
   /* Asegura el ancho máximo de la aplicación */
   margin: 0 auto;
-  padding: 2rem 0;
+  padding: 0 20px;
 }
 
+
+/* Contenedor de Filtros: Lo alineamos al borde del grid */
+.filtros-container {
+    grid-column: 1 / 2; /* Asegurar que ocupe la primera columna */
+    padding-top: 20px; /* Padding para separar del borde superior del grid */
+}
+
+/* Contenedor de Productos: Ocupa el centro */
+.productos-container {
+    grid-column: 2 / 3;
+    padding-top: 20px;
+}
+
+/* Contenedor de Carrito: Ocupa la derecha */
+.carrito-container {
+    grid-column: 3 / 4;
+    padding-top: 20px;
+}
 
 .iniciar-sesion-logo {
   width: 20px;
@@ -132,46 +150,72 @@ h1 {
   margin-right: 5px;
 }
 
-.filters-card {
-  background-color: #ff0000;
-  color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
-}
+/* Estilos del contenedor de filtros */
+    .filters-card {
+        background-color: #ff0000; /* Fondo rojo principal */
+        border-radius: 8px; /* Bordes suaves */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
 
-/*estilo forms */
-.form-control,
-.form-control:focus {
-  background-color: white;
-  color: #495057;
-  border: none;
-}
+    .card-title {
+        color: white !important;
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
 
-.checkbox-list {
-  max-height: 200px;
-  overflow-y: auto;
-  padding-left: 1rem;
-}
+    /* Título de cada sección de filtro */
+    .filter-title {
+        font-weight: 600;
+        margin-top: 0;
+        font-size: 1rem;
+        /* Línea de separación sutil */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+    }
 
-.form-check-label {
-  font-size: 1rem;
-  color: #ffffff;
-}
+    /* Estilo para los inputs */
+    .form-control,
+    .form-control:focus {
+        background-color: white;
+        color: #495057;
+        border: none;
+        box-shadow: none;
+    }
 
-.checkbox-list::-webkit-scrollbar {
-  width: 8px;
-}
+    /* Lista de checkboxes con scroll */
+    .checkbox-list {
+        max-height: 200px;
+        overflow-y: auto;
+        padding-right: 10px; /* Espacio para el scrollbar */
+        padding-left: 0;
+    }
 
-.checkbox-list::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
+    .form-check {
+        margin-bottom: 5px;
+    }
 
-.checkbox-list::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 10px;
-}
+    .form-check-input {
+        /* Asegura que los checkboxes sean visibles */
+        border: 1px solid #ccc;
+        cursor: pointer;
+    }
+
+    .form-check-label {
+        font-size: 0.95rem;
+        color: #ffffff;
+        cursor: pointer;
+    }
+    
+    /* Scrollbar estilizado (opcional) */
+    .checkbox-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .checkbox-list::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 10px;
+    }
 
 
 /*login*/
@@ -646,11 +690,11 @@ textarea {
   }
 }
 
-.home-grid {
+/* .home-grid {
   display: grid;
   grid-template-columns: 1fr 3fr 1fr;
   gap: 10px;
-}
+} */
 
 .form-check-input {
   width: 22px;
