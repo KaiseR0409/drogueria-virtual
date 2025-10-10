@@ -18,16 +18,19 @@
         registroSanitario: "",
         fechaVencimiento: "",
         condicionesAlmacenamiento: "",
+        marca: "",
+        codigoBarras: "",
+        imagenUrl: "",
         precio: 0,
         stock: 0,
-        imagenUrl: "",
     });
+
     let submitting = $state(false);
 
     onMount(() => {
         // Precargar datos si estamos editando
         if (isEditing) {
-            const p = product.producto; // objeto completo del producto
+            const p = product.producto;
             formData = {
                 nombreProducto: p.nombreProducto || "",
                 principioActivo: p.principioActivo || "",
@@ -36,14 +39,15 @@
                 presentacionComercial: p.presentacionComercial || "",
                 laboratorioFabricante: p.laboratorioFabricante || "",
                 registroSanitario: p.registroSanitario || "",
-                // Formato de fecha para input type="date"
                 fechaVencimiento: p.fechaVencimiento
                     ? p.fechaVencimiento.split("T")[0]
                     : "",
                 condicionesAlmacenamiento: p.condicionesAlmacenamiento || "",
+                marca: p.marca || "",
+                codigoBarras: p.codigoBarras || "",
+                imagenUrl: p.imagenUrl || "",
                 precio: product.precio || 0,
                 stock: product.stock || 0,
-                imagenUrl: p.imagenUrl || "",
             };
         }
     });
@@ -62,7 +66,7 @@
             const required = [
                 "nombreProducto", "principioActivo", "concentracion", "formaFarmaceutica", 
                 "presentacionComercial", "laboratorioFabricante", "registroSanitario", 
-                "condicionesAlmacenamiento", "fechaVencimiento"
+                "condicionesAlmacenamiento", "fechaVencimiento", "marca", "codigoBarras"
             ];
             const missing = required.filter(
                 (k) => (formData[k] ?? "").toString().trim().length === 0,
@@ -73,7 +77,13 @@
                 return;
             }
 
-            // Construcción del payload
+            // Validar código de barras: debe ser único y 12 dígitos
+            if (!/^\d{12}$/.test(formData.codigoBarras)) {
+                alert("El código de barras debe tener exactamente 12 dígitos numéricos.");
+                submitting = false;
+                return;
+            }
+
             const body = {
                 nombreProducto: formData.nombreProducto.trim(),
                 principioActivo: formData.principioActivo.trim(),
@@ -82,30 +92,30 @@
                 presentacionComercial: formData.presentacionComercial.trim(),
                 laboratorioFabricante: formData.laboratorioFabricante.trim(),
                 registroSanitario: formData.registroSanitario.trim(),
-                // Asegura formato ISO para la API
                 fechaVencimiento: new Date(formData.fechaVencimiento).toISOString(),
                 condicionesAlmacenamiento: formData.condicionesAlmacenamiento.trim(),
+                marca: formData.marca.trim(),
+                codigoBarras: String(formData.codigoBarras).trim(),
                 imagenUrl: formData.imagenUrl?.trim() || "",
                 precio: Number(formData.precio),
                 stock: Number(formData.stock),
             };
 
-            let method;
-            let url;
+            let method, url;
             if (isEditing) {
-                // MODO EDICION (PUT)
+                // MODO EDICIÓN
                 const idProducto = product.idProducto;
                 method = "PUT";
                 url = `http://localhost:5029/api/proveedor/${idProveedor}/producto/${idProducto}`;
-                body.idProducto = product.idProducto; // ID necesario para el PUT
+                body.idProducto = idProducto;
             } else {
-                // MODO CREACION (POST)
+                // MODO CREACIÓN
                 method = "POST";
                 url = `http://localhost:5029/api/proveedor/${idProveedor}/producto`;
             }
 
             const res = await fetch(url, {
-                method: method,
+                method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             });
@@ -113,14 +123,12 @@
             if (!res.ok) {
                 const text = await res.text();
                 console.error("API error:", res.status, text);
-                alert(`Error al ${isEditing ? "editar" : "guardar"} el producto. Estado: ${res.status}.`);
+                alert(`Error al ${isEditing ? "editar" : "guardar"} el producto.`);
                 return;
             }
-            
-            // Éxito
-            const message = isEditing ? "Producto editado con éxito." : "Producto publicado con éxito.";
-            alert(message);
-            sucess(); // notificar al padre para refrescar la lista
+
+            alert(isEditing ? "Producto editado con éxito." : "Producto publicado con éxito.");
+            sucess();
             close();
         } catch (err) {
             console.error("handleSubmit error:", err);
@@ -142,30 +150,51 @@
             <label>Presentación: <input type="text" bind:value={formData.presentacionComercial} /></label>
             <label>Laboratorio: <input type="text" bind:value={formData.laboratorioFabricante} required /></label>
             <label>Registro Sanitario: <input type="text" bind:value={formData.registroSanitario} /></label>
+            <label>Marca: <input type="text" bind:value={formData.marca} required /></label>
+            <label>Código de Barras: 
+                <input
+                    id="codigoBarras"
+                    type="number"
+                    bind:value={formData.codigoBarras}
+                    min="100000000000"   
+                    max="999999999999"   
+                    on:input={(e) => {
+                        // Evitar más de 12 caracteres
+                        if (e.target.value.length > 12) {
+                            e.target.value = e.target.value.slice(0, 12);
+                            formData.codigoBarras = e.target.value;
+                        }
+                    }}
+                    required/>
             <label>Vencimiento: <input type="date" bind:value={formData.fechaVencimiento} required /></label>
         </div>
+
         <label class="full-width">Almacenamiento:
             <textarea
                 bind:value={formData.condicionesAlmacenamiento}
                 rows="2"
-                placeholder="Ej: Ambiente fresco y seco"
+                placeholder="Ej: Mantener en lugar fresco y seco"
             ></textarea>
         </label>
     </fieldset>
 
     <fieldset>
-        <legend>Foto del Producto</legend>
-        <div class="file-input-group">
-            <input type="file" accept="image/*" class="file-input" />
-        </div>
-        <p class="upload-info">Archivos permitidos: JPG, PNG. Máx 2MB.</p>
+        <legend>Imagen del Producto</legend>
+        <label>URL de la Imagen:
+            <input type="url" bind:value={formData.imagenUrl} placeholder="https://..." />
+        </label>
+        <p class="upload-info">Puedes pegar el enlace directo a la imagen (JPG, PNG).</p>
     </fieldset>
 
     <fieldset>
         <legend>Inventario y Precios</legend>
         <div class="form-grid">
-            <label>Precio de Venta ($): <input type="number" step="0.01" bind:value={formData.precio} min="0.01" required /></label>
-            <label>Stock Disponible: <input type="number" bind:value={formData.stock} min="0" required /></label>
+            <label>Precio de Venta ($): 
+                <input type="number" step="0.01" bind:value={formData.precio} min="0.01" required />
+            </label>
+            <label>Stock Disponible: 
+                <input type="number" bind:value={formData.stock} min="0" required />
+            </label>
         </div>
     </fieldset>
 
