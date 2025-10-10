@@ -26,6 +26,13 @@ public class ProductoPublicacionDto
     // Nuevo campo para la URL de la imagen subida
     public string? ImagenUrl { get; set; }
 
+    [Required]
+    public string Marca { get; set; }
+
+    [Required]
+    [StringLength(12, ErrorMessage = "El código de barras debe tener como máximo 12 caracteres.")]
+    public string CodigoBarras { get; set; }
+
     // Campos de Inventario (ProveedorProducto)
     [Required]
     [Range(0.01, double.MaxValue)]

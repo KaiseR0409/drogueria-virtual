@@ -41,7 +41,9 @@ public class ProveedorProductoController : ControllerBase
                 RegistroSanitario = dto.RegistroSanitario,
                 FechaVencimiento = dto.FechaVencimiento,
                 CondicionesAlmacenamiento = dto.CondicionesAlmacenamiento,
-                ImagenUrl = dto.ImagenUrl // Usar la URL devuelta por el FilesController
+                ImagenUrl = dto.ImagenUrl, // Usar la URL devuelta por el FilesController
+                Marca = dto.Marca,
+                CodigoBarras = dto.CodigoBarras
             };
 
             _context.Productos.Add(nuevoProducto);
@@ -95,7 +97,7 @@ public class ProveedorProductoController : ControllerBase
 
         try
         {
-            // 1. ACTUALIZAR PRODUCTO (Tabla Productos)
+            //ACTUALIZAR PRODUCTO (Tabla Productos)
             var productoExistente = await _context.Productos.FindAsync(idProducto);
 
             if (productoExistente == null)
@@ -114,6 +116,8 @@ public class ProveedorProductoController : ControllerBase
             productoExistente.FechaVencimiento = dto.FechaVencimiento;
             productoExistente.CondicionesAlmacenamiento = dto.CondicionesAlmacenamiento;
             productoExistente.ImagenUrl = dto.ImagenUrl;
+            productoExistente.Marca = dto.Marca;
+            productoExistente.CodigoBarras = dto.CodigoBarras;
 
             _context.Productos.Update(productoExistente);
             await _context.SaveChangesAsync();
@@ -260,11 +264,9 @@ public class ProveedorProductoController : ControllerBase
             query = query.Where(pp => pp.Producto.FormaFarmaceutica.ToLower().Contains(formaFarmaceutica.ToLower()));
         }
 
-        // Si usas la lista de laboratorios seleccionados del filtro (chequeo de pertenencia)
+        
         if (laboratoriosSeleccionados != null && laboratoriosSeleccionados.Any())
         {
-            // Nota: Asegúrate de que los nombres coincidan exactamente con lo que devuelve la base de datos
-            // o mapea los filtros a mayúsculas/minúsculas si es necesario.
             query = query.Where(pp => laboratoriosSeleccionados.Contains(pp.Producto.LaboratorioFabricante));
         }
 

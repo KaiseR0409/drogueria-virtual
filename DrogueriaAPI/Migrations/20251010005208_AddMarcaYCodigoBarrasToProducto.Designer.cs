@@ -4,6 +4,7 @@ using DrogueriaAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DrogueriaAPI.Migrations
 {
     [DbContext(typeof(DrogueriaDbContext))]
-    partial class DrogueriaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251010005208_AddMarcaYCodigoBarrasToProducto")]
+    partial class AddMarcaYCodigoBarrasToProducto
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -78,9 +81,6 @@ namespace DrogueriaAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdProducto");
-
-                    b.HasIndex("CodigoBarras")
-                        .IsUnique();
 
                     b.ToTable("Producto");
                 });

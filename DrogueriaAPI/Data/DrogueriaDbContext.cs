@@ -25,6 +25,9 @@ namespace DrogueriaAPI.Data
 
                 // --- INICIO DE LA CONFIGURACIÓN ---
 
+                modelBuilder.Entity<Producto>()
+                    .HasIndex(p => p.CodigoBarras)
+                    .IsUnique();
                 // Configura la entidad Usuario para su clave primaria
                 modelBuilder.Entity<Usuarios>(entity =>
                 {

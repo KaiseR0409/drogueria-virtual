@@ -8,6 +8,12 @@ namespace DrogueriaAPI.Models
     {
         [Key]
         public int IdProducto { get; set; }
+        [Required]
+        public string Marca { get; set; }
+
+        [Required]
+        [StringLength(12, ErrorMessage = "El código de barras debe tener como máximo 12 caracteres.")]
+        public string CodigoBarras { get; set; }
         public required string NombreProducto { get; set; }
         public required string PrincipioActivo { get; set; }
         public required string Concentracion { get; set; }
