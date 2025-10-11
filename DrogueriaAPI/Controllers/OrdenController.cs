@@ -101,7 +101,8 @@ namespace DrogueriaAPI.Controllers
                 orden.Moneda,
                 orden.Impuestos,
                 orden.Descuento,
-                Items = orden.Items.Select(i => new {
+                Items = orden.Items.Select(i => new
+                {
                     i.IdItemOrden,
                     i.IdProducto,
                     Producto = i.Producto.NombreProducto,
@@ -122,7 +123,8 @@ namespace DrogueriaAPI.Controllers
                 .ThenInclude(i => i.Producto)
                 .ToListAsync();
 
-            return Ok(ordenes.Select(o => new {
+            return Ok(ordenes.Select(o => new
+            {
                 o.IdOrden,
                 o.IdUsuario,
                 o.IdProveedor,
@@ -131,7 +133,8 @@ namespace DrogueriaAPI.Controllers
                 o.MontoTotal,
                 o.NumeroFactura,
                 o.FechaFactura,
-                Items = o.Items.Select(i => new {
+                Items = o.Items.Select(i => new
+                {
                     i.IdProducto,
                     Producto = i.Producto.NombreProducto,
                     i.Cantidad,
@@ -247,8 +250,59 @@ namespace DrogueriaAPI.Controllers
                 return StatusCode(500, new { mensaje = "Error interno", error = ex.Message });
             }
         }
+        // GET: api/Orden/mi-historial/{idUsuario}
+        [HttpGet("mi-historial/{idUsuario}")]
+        public async Task<IActionResult> GetHistorialPorUsuario(int idUsuario)
+        {
+            try
+            {
+                
+                var historial = await _context.Ordenes
+                    .Where(o => o.IdUsuario == idUsuario)
+                    .Include(o => o.Items)
+                    .ThenInclude(i => i.Producto)
+                    .Include(o => o.Proveedor)
+                    .OrderByDescending(o => o.FechaOrden)
+                    .ToListAsync();
+
+                
+
+                if (!historial.Any())
+                {
+                    return NotFound(new { mensaje = "No se encontraron órdenes para este usuario." });
+                }
+
+                
+                // Devolvemos solo los datos esenciales para la vista
+                return Ok(historial.Select(o => new
+                {
+                    o.IdOrden,
+                    o.IdUsuario,
+                    o.IdProveedor,
+                    o.FechaOrden,
+                    o.EstadoOrden,
+                    o.MontoTotal,
+                    o.NumeroFactura,
+                    o.FechaFactura,
+                    NombreProveedor = o.Proveedor.NombreProveedor,
+                    Items = o.Items.Select(i => new
+                    {
+                        i.IdProducto,
+                        NombreProducto = i.Producto.NombreProducto, 
+                        i.Cantidad,
+                        i.PrecioUnitario
+                    }),
+                    
+                    // Proveedor = o.Proveedor.NombreProveedor // REQUIERE .Include(o => o.Proveedor)
+                }));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Error interno al obtener el historial de compras.", error = ex.Message });
+            }
 
 
 
+        }
     }
 }

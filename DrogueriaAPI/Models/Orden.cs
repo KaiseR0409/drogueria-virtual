@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 public class Orden
 {
@@ -16,6 +17,8 @@ public class Orden
 
     // Relación con el proveedor
     public int IdProveedor { get; set; }
+    [ForeignKey("IdProveedor")] 
+    public virtual Proveedor Proveedor { get; set; }
 
     // Datos de la orden
     public DateTime FechaOrden { get; set; }
