@@ -1,10 +1,10 @@
 <script>
-	import { onDestroy, onMount } from 'svelte';
+    import { onDestroy, onMount } from "svelte";
     let token = localStorage.getItem("token");
     let tipoUsuario = localStorage.getItem("tipoUsuario");
     let nombreUsuario = localStorage.getItem("nombreUsuario");
-    if(tipoUsuario === "Proveedor"){
-         nombreUsuario = localStorage.getItem("nombreProveedor");
+    if (tipoUsuario === "Proveedor") {
+        nombreUsuario = localStorage.getItem("nombreProveedor");
     }
     let idProveedor = localStorage.getItem("idProveedor");
     let idUsuario = localStorage.getItem("idUsuario");
@@ -14,26 +14,30 @@
         localStorage.removeItem("token");
         localStorage.removeItem("tipoUsuario");
         localStorage.removeItem("nombreUsuario");
-        localStorage.removeItem("idProveedor"); 
+        localStorage.removeItem("idProveedor");
         localStorage.removeItem("idUsuario");
         localStorage.removeItem("nombreProveedor");
         window.location.href = "/login";
 
         token = null;
-        
     }
-    function onStorage(e){
-        if(e.key === 'token' || e.key === 'tipoUsuario' || e.key === 'nombreUsuario' || e.key === 'idProveedor'){
-            token = localStorage.getItem('token');
-            tipoUsuario = localStorage.getItem('tipoUsuario');
-            nombreUsuario = localStorage.getItem('nombreUsuario');
-            idProveedor = localStorage.getItem('idProveedor');
-            idUsuario = localStorage.getItem('idUsuario');
+    function onStorage(e) {
+        if (
+            e.key === "token" ||
+            e.key === "tipoUsuario" ||
+            e.key === "nombreUsuario" ||
+            e.key === "idProveedor"
+        ) {
+            token = localStorage.getItem("token");
+            tipoUsuario = localStorage.getItem("tipoUsuario");
+            nombreUsuario = localStorage.getItem("nombreUsuario");
+            idProveedor = localStorage.getItem("idProveedor");
+            idUsuario = localStorage.getItem("idUsuario");
             console.log("LocalStorage actualizado en Navbar:", localStorage);
         }
-    onMount(() => window.addEventListener('storage', onStorage));
-    onDestroy(() => window.removeEventListener('storage', onStorage));
-}
+        onMount(() => window.addEventListener("storage", onStorage));
+        onDestroy(() => window.removeEventListener("storage", onStorage));
+    }
 </script>
 
 <header>
@@ -59,28 +63,46 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     {#if token}
+                        <li class="nav-item">
+                            <a
+                                style="text-decoration: none; color:"
+                                href="#/ver-transacciones"
+                                ><button class="btn btn-warning">
+                                    Ver Transacciones</button
+                                ></a
+                            >
+                        </li>
                         {#if tipoUsuario === "Administrador"}
                             <li class="nav-item">
-                                <a class="nav-link text-light" href="#/admin"
+                                <a class="nav-link text-light" href="#/admin">
+                                    <button class="btn btn-warning"
+                                        >Administra usuarios</button
                                     >
-                                    <button class="btn btn-warning">Administra usuarios</button>
                                 </a>
                             </li>
                         {:else if tipoUsuario === "Proveedor"}
                             <li class="nav-item">
                                 <a
                                     class="nav-link text-light"
-                                    href="#/gestionar-productos"><button class="btn btn-warning"> Gestionar Productos </button></a
+                                    href="#/gestionar-productos"
+                                    ><button class="btn btn-warning">
+                                        Gestionar Productos
+                                    </button></a
                                 >
-                                
                             </li>
                             <li class="nav-item">
-                                <a style="text-decoration: none; color:" href="#/mis-facturas"><button class="btn btn-warning"> Mis Facturas</button></a>
+                                <a
+                                    style="text-decoration: none; color:"
+                                    href="#/mis-facturas"
+                                    ><button class="btn btn-warning">
+                                        Mis Facturas</button
+                                    ></a
+                                >
                             </li>
                         {/if}
-                    {/if}            
+                    {/if}
                 </ul>
-                
+
                 {#if token}
                     <!-- Si hay token -->
                     <button on:click={logout} class="btn btn-logout">
