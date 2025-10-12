@@ -73,6 +73,71 @@ public class ProveedorProductoController : ControllerBase
             return StatusCode(500, $"Error al publicar el producto: {ex.Message}");
         }
     }
+    // POST: api/proveedor/{idProveedor}/carga-masiva
+    [HttpPost("{idProveedor}/carga-masiva")]
+    public async Task<IActionResult> CargaMasivaDesdeJson(int idProveedor, [FromBody] List<ProductoPublicacionDto> productosNuevos)
+    {
+        if (productosNuevos == null || !productosNuevos.Any())
+        {
+            return BadRequest(new { mensaje = "La lista de productos no puede estar vacía." });
+        }
+
+        var proveedor = await _context.Proveedor.FindAsync(idProveedor);
+        if (proveedor == null)
+        {
+            return NotFound($"Proveedor con ID {idProveedor} no encontrado.");
+        }
+
+
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            foreach (var dto in productosNuevos)
+            {
+                if (string.IsNullOrEmpty(dto.NombreProducto) || dto.Precio <= 0)
+                {
+                    await transaction.RollbackAsync();
+                    return BadRequest(new { mensaje = $"El producto '{dto.NombreProducto ?? "desconocido"}' tiene datos inválidos." });
+                }
+
+                var nuevoProducto = new Producto
+                {
+                    NombreProducto = dto.NombreProducto,
+                    PrincipioActivo = dto.PrincipioActivo,
+                    Concentracion = dto.Concentracion,
+                    FormaFarmaceutica = dto.FormaFarmaceutica,
+                    PresentacionComercial = dto.PresentacionComercial,
+                    LaboratorioFabricante = dto.LaboratorioFabricante,
+                    RegistroSanitario = dto.RegistroSanitario,
+                    FechaVencimiento = dto.FechaVencimiento,
+                    CondicionesAlmacenamiento = dto.CondicionesAlmacenamiento,
+                    ImagenUrl = dto.ImagenUrl,
+                    Marca = dto.Marca,
+                    CodigoBarras = dto.CodigoBarras
+                };
+                _context.Productos.Add(nuevoProducto);
+
+                var inventario = new ProveedorProducto
+                {
+                    Proveedor = proveedor,
+                    Producto = nuevoProducto,
+                    Precio = dto.Precio,
+                    Stock = dto.Stock
+                };
+                _context.ProveedorProducto.Add(inventario);
+            }
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return Ok(new { mensaje = $"{productosNuevos.Count} productos han sido publicados exitosamente." });
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return StatusCode(500, new { mensaje = "Ocurrió un error al guardar los productos.", error = ex.Message });
+        }
+    }
 
     // GET: api/proveedor/{idProveedor}/productos (Listado para el Dashboard)
     [HttpGet("{idProveedor}/productos")]
@@ -150,6 +215,8 @@ public class ProveedorProductoController : ControllerBase
             return StatusCode(500, $"Error al editar el producto: {ex.Message}");
         }
     }
+
+   
     // PUT: api/proveedor/{idProveedor}/inventario/{idProducto} (Editar Precio y Stock)
     [HttpPut("{idProveedor}/inventario/{idProducto}")]
     public async Task<IActionResult> UpdateInventario(int idProveedor, int idProducto, [FromBody] InventarioUpdateDto dto)
@@ -226,7 +293,7 @@ public class ProveedorProductoController : ControllerBase
         return item;
     }
     // GET: api/ProveedorProducto/InventarioCompletoConFiltros
-    // Este endpoint está diseñado para el MODO COMPRADOR, trayendo todos los productos con sus opciones de proveedor.
+    // Este endpoint está diseñado para el MODO COMPRADOR, trayendo todos los productos con sus opciones de proveedor
     [HttpGet("/api/ProveedorProducto/InventarioCompletoConFiltros")]
     public async Task<ActionResult<IEnumerable<ProveedorProducto>>> GetInventarioCompletoConFiltros(
         [FromQuery] string? nombreProducto,
