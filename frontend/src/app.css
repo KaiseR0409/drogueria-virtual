@@ -35,7 +35,7 @@ h1 {
 
 #app {
   max-width: 100%;
-  margin: 0 ;
+  margin: 0;
   padding: 0;
 }
 
@@ -128,20 +128,22 @@ h1 {
 
 /* Contenedor de Filtros: Lo alineamos al borde del grid */
 .filtros-container {
-    grid-column: 1 / 2; /* Asegurar que ocupe la primera columna */
-    padding-top: 20px; /* Padding para separar del borde superior del grid */
+  grid-column: 1 / 2;
+  /* Asegurar que ocupe la primera columna */
+  padding-top: 20px;
+  /* Padding para separar del borde superior del grid */
 }
 
 /* Contenedor de Productos: Ocupa el centro */
 .productos-container {
-    grid-column: 2 / 3;
-    padding-top: 20px;
+  grid-column: 2 / 3;
+  padding-top: 20px;
 }
 
 /* Contenedor de Carrito: Ocupa la derecha */
 .carrito-container {
-    grid-column: 3 / 4;
-    padding-top: 20px;
+  grid-column: 3 / 4;
+  padding-top: 20px;
 }
 
 .iniciar-sesion-logo {
@@ -151,71 +153,74 @@ h1 {
 }
 
 /* Estilos del contenedor de filtros */
-    .filters-card {
-        background-color: #ff0000; /* Fondo rojo principal */
-        border-radius: 8px; /* Bordes suaves */
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    }
+.filters-card {
+  background-color: #ff0000;
+  /* Fondo rojo principal */
+  border-radius: 8px;
+  /* Bordes suaves */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
 
-    .card-title {
-        color: white !important;
-        font-weight: 700;
-        font-size: 1.25rem;
-    }
+.card-title {
+  color: white !important;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
 
-    /* Título de cada sección de filtro */
-    .filter-title {
-        font-weight: 600;
-        margin-top: 0;
-        font-size: 1rem;
-        /* Línea de separación sutil */
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        padding-bottom: 5px;
-        margin-bottom: 10px;
-    }
+/* Título de cada sección de filtro */
+.filter-title {
+  font-weight: 600;
+  margin-top: 0;
+  font-size: 1rem;
+  /* Línea de separación sutil */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
 
-    /* Estilo para los inputs */
-    .form-control,
-    .form-control:focus {
-        background-color: white;
-        color: #495057;
-        border: none;
-        box-shadow: none;
-    }
+/* Estilo para los inputs */
+.form-control,
+.form-control:focus {
+  background-color: white;
+  color: #495057;
+  border: none;
+  box-shadow: none;
+}
 
-    /* Lista de checkboxes con scroll */
-    .checkbox-list {
-        max-height: 200px;
-        overflow-y: auto;
-        padding-right: 10px; /* Espacio para el scrollbar */
-        padding-left: 0;
-    }
+/* Lista de checkboxes con scroll */
+.checkbox-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 10px;
+  /* Espacio para el scrollbar */
+  padding-left: 0;
+}
 
-    .form-check {
-        margin-bottom: 5px;
-    }
+.form-check {
+  margin-bottom: 5px;
+}
 
-    .form-check-input {
-        /* Asegura que los checkboxes sean visibles */
-        border: 1px solid #ccc;
-        cursor: pointer;
-    }
+.form-check-input {
+  /* Asegura que los checkboxes sean visibles */
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
 
-    .form-check-label {
-        font-size: 0.95rem;
-        color: #ffffff;
-        cursor: pointer;
-    }
-    
-    /* Scrollbar estilizado (opcional) */
-    .checkbox-list::-webkit-scrollbar {
-        width: 6px;
-    }
+.form-check-label {
+  font-size: 0.95rem;
+  color: #ffffff;
+  cursor: pointer;
+}
 
-    .checkbox-list::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.4);
-        border-radius: 10px;
-    }
+/* Scrollbar estilizado (opcional) */
+.checkbox-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.checkbox-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+}
 
 
 /*login*/
@@ -1982,4 +1987,24 @@ button:disabled,
   display: flex;
   flex-direction: column;
 }
+/*Alerta de seguridad*/
+.alerta-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  text-align: center;
+}
 
+.alerta-box {
+  padding: 40px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.alerta-box h1 {
+  color: #d9534f;
+  margin-bottom: 20px;
+}

@@ -1,6 +1,9 @@
 <script>
     import { onMount, onDestroy } from "svelte";
     import ProductModal from "./ProductModal.svelte"; // Componente ProductModal
+    import { checkAuth } from './auth.js';
+
+    checkAuth({ rolRequerido: 'Proveedor' });
 
     // Estado reactivo de los productos
     let productos = [];
@@ -17,7 +20,7 @@
     let filtroID = "";
     let filtroStock = "";
     
-    // ⚙️ Lógica de Paginación
+    //  Lógica de Paginación
     const itemsPerPage = 8; // Filas por página
     let currentPage = 1;
 
@@ -111,7 +114,7 @@
     
     // --- Lógica de Filtro y Paginación ---
 
-    // 1. Filtrado Reactivo
+    // Filtrado Reactivo
     $: productosFiltrados = productos
         .filter(p => {
             const nombre = p.producto?.nombreProducto?.toLowerCase() || '';
@@ -126,13 +129,13 @@
         })
         .sort((a, b) => (a.producto.nombreProducto || '').localeCompare(b.producto.nombreProducto || '')); // Ordenar alfabéticamente por nombre
     
-    // 2. Paginación Reactiva
+    // Paginación Reactiva
     $: totalPages = Math.ceil(productosFiltrados.length / itemsPerPage);
     $: startIndex = (currentPage - 1) * itemsPerPage;
     $: endIndex = startIndex + itemsPerPage;
     $: productosPaginados = productosFiltrados.slice(startIndex, endIndex);
 
-    // 3. Resetear la página al filtrar
+    // Resetear la página al filtrar
     $: productosFiltrados, (currentPage = 1);
 
     function goToPage(page) {

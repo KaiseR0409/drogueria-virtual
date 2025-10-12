@@ -1,5 +1,7 @@
 <script>
     import { onMount } from "svelte";
+    import { checkAuth } from './auth.js';
+    checkAuth({ rolRequerido: 'Administrador' });
 
     let nombreUsuario = "";
     let usuario = "";

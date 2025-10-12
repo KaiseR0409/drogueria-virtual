@@ -1,6 +1,9 @@
 <script>
     import { onMount } from "svelte";
     import FacturaPreview from "./FacturaPreview.svelte";
+    import { checkAuth } from './auth.js';
+
+    checkAuth(rolRequerido = 'Proveedor');
 
     let facturas = [];
     let idProveedor = localStorage.getItem("idProveedor");

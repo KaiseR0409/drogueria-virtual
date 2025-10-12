@@ -1,7 +1,7 @@
 <script>
     import { onMount } from "svelte";
-    // Podrías necesitar un componente similar para previsualizar la orden
-    // import OrdenPreview from "./OrdenPreview.svelte"; 
+    import { checkAuth } from './auth.js';
+    checkAuth();
 
     let historial = [];
     let idUsuario = localStorage.getItem("idUsuario");
