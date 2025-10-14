@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import * as XLSX from 'xlsx'; 
+    import * as XLSX from 'xlsx';
     import ProductModal from "./ProductModal.svelte";
     import { checkAuth } from './auth.js';
 
@@ -10,13 +10,15 @@
     let productos: any[] = [];
     let loading = true;
     let fetchError: string | null = null;
-    let isModalOpen = false;
-    let selectedProduct: any = null;
-    let _popstateHandler: (() => void) | null = null;
 
     // --- Variables de Carga Masiva ---
     let archivoSeleccionado: File;
     let mensajeCargaMasiva = '';
+
+    // --- Estado del modal y producto seleccionado ---
+    let isModalOpen = false;
+    let selectedProduct: any = null;
+    let _popstateHandler: (() => void) | null = null;
 
     // --- Variables de Filtro y Paginación ---
     let filtroNombre = "";
