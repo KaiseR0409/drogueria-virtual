@@ -4,6 +4,7 @@ using DrogueriaAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DrogueriaAPI.Migrations
 {
     [DbContext(typeof(DrogueriaDbContext))]
-    partial class DrogueriaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251014005739_AddIvaRut")]
+    partial class AddIvaRut
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,6 +96,9 @@ namespace DrogueriaAPI.Migrations
                     b.Property<string>("NombreProveedor")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Rut")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("IdProveedor");
 
                     b.ToTable("Proveedor");
@@ -137,12 +143,7 @@ namespace DrogueriaAPI.Migrations
                     b.Property<string>("Password")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("RazonSocial")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Rut")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Telefono")
@@ -218,7 +219,7 @@ namespace DrogueriaAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdOrden"));
 
-                    b.Property<decimal>("Descuento")
+                    b.Property<decimal?>("Descuento")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("DireccionEnvioCompleta")
@@ -235,6 +236,9 @@ namespace DrogueriaAPI.Migrations
                     b.Property<DateTime>("FechaOrden")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("FechaVencimiento")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("IdProveedor")
                         .HasColumnType("int");
 
@@ -242,6 +246,9 @@ namespace DrogueriaAPI.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Impuestos")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Iva")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("MetodoPago")
@@ -263,13 +270,24 @@ namespace DrogueriaAPI.Migrations
                     b.Property<string>("NumeroOrdenCompra")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("TipoComprobante")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UsuarioIdUsuario")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VendedorAsignado")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdOrden");
 
                     b.HasIndex("IdProveedor");
+
+                    b.HasIndex("UsuarioIdUsuario");
 
                     b.ToTable("Orden");
                 });
@@ -343,7 +361,15 @@ namespace DrogueriaAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("DrogueriaAPI.Models.Usuarios", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioIdUsuario")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Proveedor");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("ProveedorProducto", b =>

@@ -4,6 +4,7 @@ using DrogueriaAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DrogueriaAPI.Migrations
 {
     [DbContext(typeof(DrogueriaDbContext))]
-    partial class DrogueriaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251014005039_AddInvoiceDetailFields")]
+    partial class AddInvoiceDetailFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,7 +93,22 @@ namespace DrogueriaAPI.Migrations
                     b.Property<int>("IdProveedor")
                         .HasColumnType("int");
 
+                    b.Property<string>("Direccion")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Giro")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("InfoPago")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("NombreProveedor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Rut")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Telefono")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdProveedor");
@@ -106,8 +124,14 @@ namespace DrogueriaAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUsuario"));
 
+                    b.Property<string>("Comuna")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Correo")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Direccion")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Direccion1")
@@ -130,6 +154,9 @@ namespace DrogueriaAPI.Migrations
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Giro")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("NombreUsuario")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -137,12 +164,7 @@ namespace DrogueriaAPI.Migrations
                     b.Property<string>("Password")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("RazonSocial")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Rut")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Telefono")
@@ -218,7 +240,7 @@ namespace DrogueriaAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdOrden"));
 
-                    b.Property<decimal>("Descuento")
+                    b.Property<decimal?>("Descuento")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("DireccionEnvioCompleta")
@@ -235,6 +257,9 @@ namespace DrogueriaAPI.Migrations
                     b.Property<DateTime>("FechaOrden")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("FechaVencimiento")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("IdProveedor")
                         .HasColumnType("int");
 
@@ -242,6 +267,9 @@ namespace DrogueriaAPI.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Impuestos")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Iva")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("MetodoPago")
@@ -263,8 +291,14 @@ namespace DrogueriaAPI.Migrations
                     b.Property<string>("NumeroOrdenCompra")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("TipoComprobante")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VendedorAsignado")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdOrden");

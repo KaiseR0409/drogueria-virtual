@@ -74,42 +74,35 @@ namespace DrogueriaAPI.Controllers
                 Items = request.Items
             });
         }
-        // Obtener una orden por ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetOrden(int id)
         {
             var orden = await _context.Ordenes
                 .Include(o => o.Items)
                 .ThenInclude(i => i.Producto)
+                .Include(o => o.Proveedor)
                 .FirstOrDefaultAsync(o => o.IdOrden == id);
 
             if (orden == null)
+            {
                 return NotFound();
+            }
 
             return Ok(new
             {
-                orden.IdOrden,
-                orden.IdUsuario,
-                orden.IdProveedor,
-                orden.FechaOrden,
-                orden.EstadoOrden,
-                orden.MontoTotal,
-                orden.NumeroFactura,
-                orden.TipoComprobante,
-                orden.FechaFactura,
-                orden.MetodoPago,
-                orden.Moneda,
-                orden.Impuestos,
-                orden.Descuento,
-                Items = orden.Items.Select(i => new
+                IdOrden = orden.IdOrden,
+                FechaOrden = orden.FechaOrden,
+                MontoTotal = orden.MontoTotal,
+
+                Proveedor = new
                 {
-                    i.IdItemOrden,
-                    i.IdProducto,
-                    Producto = i.Producto.NombreProducto,
-                    i.Cantidad,
-                    i.PrecioUnitario,
-                    i.Impuesto,
-                    i.Descuento
+                    NombreProveedor = orden.Proveedor.NombreProveedor,
+                },
+
+                Items = orden.Items.Select(i => new {
+                    NombreProducto = i.Producto.NombreProducto,
+                    Cantidad = i.Cantidad,
+                    PrecioUnitario = i.PrecioUnitario,
                 })
             });
         }

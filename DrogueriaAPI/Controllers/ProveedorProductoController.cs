@@ -88,54 +88,78 @@ public class ProveedorProductoController : ControllerBase
             return NotFound($"Proveedor con ID {idProveedor} no encontrado.");
         }
 
-
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
             foreach (var dto in productosNuevos)
             {
-                if (string.IsNullOrEmpty(dto.NombreProducto) || dto.Precio <= 0)
+                if (string.IsNullOrEmpty(dto.NombreProducto) || dto.Precio <= 0 || string.IsNullOrEmpty(dto.CodigoBarras))
                 {
                     await transaction.RollbackAsync();
-                    return BadRequest(new { mensaje = $"El producto '{dto.NombreProducto ?? "desconocido"}' tiene datos inválidos." });
+                    return BadRequest(new { mensaje = $"El producto '{dto.NombreProducto ?? "desconocido"}' tiene datos inválidos (nombre, precio o código de barras)." });
                 }
 
-                var nuevoProducto = new Producto
-                {
-                    NombreProducto = dto.NombreProducto,
-                    PrincipioActivo = dto.PrincipioActivo,
-                    Concentracion = dto.Concentracion,
-                    FormaFarmaceutica = dto.FormaFarmaceutica,
-                    PresentacionComercial = dto.PresentacionComercial,
-                    LaboratorioFabricante = dto.LaboratorioFabricante,
-                    RegistroSanitario = dto.RegistroSanitario,
-                    FechaVencimiento = dto.FechaVencimiento,
-                    CondicionesAlmacenamiento = dto.CondicionesAlmacenamiento,
-                    ImagenUrl = dto.ImagenUrl,
-                    Marca = dto.Marca,
-                    CodigoBarras = dto.CodigoBarras
-                };
-                _context.Productos.Add(nuevoProducto);
+                var productoExistente = await _context.Productos
+                    .FirstOrDefaultAsync(p => p.CodigoBarras == dto.CodigoBarras);
 
-                var inventario = new ProveedorProducto
+                Producto productoParaAsociar;
+
+                if (productoExistente == null)
                 {
-                    Proveedor = proveedor,
-                    Producto = nuevoProducto,
-                    Precio = dto.Precio,
-                    Stock = dto.Stock
-                };
-                _context.ProveedorProducto.Add(inventario);
+                    var nuevoProducto = new Producto
+                    {
+                        NombreProducto = dto.NombreProducto,
+                        PrincipioActivo = dto.PrincipioActivo,
+                        Concentracion = dto.Concentracion,
+                        FormaFarmaceutica = dto.FormaFarmaceutica,
+                        PresentacionComercial = dto.PresentacionComercial,
+                        LaboratorioFabricante = dto.LaboratorioFabricante,
+                        RegistroSanitario = dto.RegistroSanitario,
+                        FechaVencimiento = dto.FechaVencimiento,
+                        CondicionesAlmacenamiento = dto.CondicionesAlmacenamiento,
+                        ImagenUrl = dto.ImagenUrl,
+                        Marca = dto.Marca,
+                        CodigoBarras = dto.CodigoBarras
+                    };
+                    _context.Productos.Add(nuevoProducto);
+                    productoParaAsociar = nuevoProducto;
+                }
+                else
+                {
+                    productoParaAsociar = productoExistente;
+                }
+
+                var inventarioExistente = await _context.ProveedorProducto
+                    .FirstOrDefaultAsync(pp => pp.IdProveedor == idProveedor && pp.IdProducto == productoParaAsociar.IdProducto);
+
+                if (inventarioExistente != null)
+                {
+                    inventarioExistente.Precio = dto.Precio;
+                    inventarioExistente.Stock = dto.Stock;
+                }
+                else
+                {
+
+                    var nuevoInventario = new ProveedorProducto
+                    {
+                        IdProveedor = idProveedor,
+                        Producto = productoParaAsociar, 
+                        Precio = dto.Precio,
+                        Stock = dto.Stock
+                    };
+                    _context.ProveedorProducto.Add(nuevoInventario);
+                }
             }
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            return Ok(new { mensaje = $"{productosNuevos.Count} productos han sido publicados exitosamente." });
+            return Ok(new { mensaje = $"{productosNuevos.Count} registros de productos han sido procesados exitosamente." });
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            return StatusCode(500, new { mensaje = "Ocurrió un error al guardar los productos.", error = ex.Message });
+            return StatusCode(500, new { mensaje = "Ocurrió un error al procesar la carga masiva.", error = ex.InnerException?.Message ?? ex.Message });
         }
     }
 
