@@ -127,7 +127,10 @@
                     const workbook = XLSX.read(data, { type: 'array' });
                     const sheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[sheetName];
-                    const productosJSON = XLSX.utils.sheet_to_json(worksheet);
+                    const productosJSON = XLSX.utils.sheet_to_json(worksheet, {
+                        raw: false,
+                        dateNF: 'yyyy-mm-dd'
+                    });
                     procesarYEnviar(productosJSON);
                 } catch (err) {
                      mensajeCargaMasiva = `Error al leer el archivo Excel: ${(err as Error).message}`;
@@ -169,10 +172,14 @@
     async function handleDelete(idProducto: number) {
         if (confirm("¿Está seguro de eliminar este producto?")) {
             const idProveedor = localStorage.getItem("idProveedor");
+            const token = localStorage.getItem("token"); // Se necesita token para borrar
             try {
                 const res = await fetch(
                     `http://localhost:5029/api/proveedor/${idProveedor}/inventario/${idProducto}`,
-                    { method: "DELETE" },
+                    { 
+                        method: "DELETE",
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    },
                 );
                 if (!res.ok) throw new Error("Error al eliminar el producto");
                 productos = productos.filter(
