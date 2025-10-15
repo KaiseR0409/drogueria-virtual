@@ -19,7 +19,7 @@ public class ProductoPublicacionDto
     [Required]
     public string RegistroSanitario { get; set; }
 
-    public DateTime? FechaVencimiento { get; set; }
+    public string? FechaVencimiento { get; set; }
     [Required]
     public string CondicionesAlmacenamiento { get; set; }
 

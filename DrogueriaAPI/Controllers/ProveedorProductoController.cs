@@ -29,7 +29,6 @@ public class ProveedorProductoController : ControllerBase
 
         try
         {
-            // INSERCIÓN 1: Crear el Producto
             var nuevoProducto = new Producto
             {
                 NombreProducto = dto.NombreProducto,
@@ -39,7 +38,9 @@ public class ProveedorProductoController : ControllerBase
                 PresentacionComercial = dto.PresentacionComercial,
                 LaboratorioFabricante = dto.LaboratorioFabricante,
                 RegistroSanitario = dto.RegistroSanitario,
-                FechaVencimiento = dto.FechaVencimiento,
+                FechaVencimiento = !string.IsNullOrEmpty(dto.FechaVencimiento) && DateTime.TryParse(dto.FechaVencimiento, out var fechaVencimiento)
+                    ? fechaVencimiento
+                    : (DateTime?)null,
                 CondicionesAlmacenamiento = dto.CondicionesAlmacenamiento,
                 ImagenUrl = dto.ImagenUrl, // Usar la URL devuelta por el FilesController
                 Marca = dto.Marca,
@@ -98,6 +99,24 @@ public class ProveedorProductoController : ControllerBase
                     await transaction.RollbackAsync();
                     return BadRequest(new { mensaje = $"El producto '{dto.NombreProducto ?? "desconocido"}' tiene datos inválidos (nombre, precio o código de barras)." });
                 }
+                DateTime? fechaParseada = null;
+                if (!string.IsNullOrEmpty(dto.FechaVencimiento))
+                {
+                    string[] formats = { "yyyy-MM-dd", "dd/MM/yyyy", "d/M/yy", "M/d/yy" };
+
+                    if (DateTime.TryParseExact(dto.FechaVencimiento, formats,
+                                                System.Globalization.CultureInfo.InvariantCulture,
+                                                System.Globalization.DateTimeStyles.None, out DateTime fecha))
+                    {
+                        fechaParseada = fecha;
+                    }
+                    else
+                    {
+
+                        await transaction.RollbackAsync();
+                        return BadRequest(new { mensaje = $"El formato de fecha '{dto.FechaVencimiento}' en el producto '{dto.NombreProducto}' no es válido. Use AAAA-MM-DD o DD/MM/AAAA." });
+                    }
+                }
 
                 var productoExistente = await _context.Productos
                     .FirstOrDefaultAsync(p => p.CodigoBarras == dto.CodigoBarras);
@@ -115,7 +134,7 @@ public class ProveedorProductoController : ControllerBase
                         PresentacionComercial = dto.PresentacionComercial,
                         LaboratorioFabricante = dto.LaboratorioFabricante,
                         RegistroSanitario = dto.RegistroSanitario,
-                        FechaVencimiento = dto.FechaVencimiento,
+                        FechaVencimiento = fechaParseada,
                         CondicionesAlmacenamiento = dto.CondicionesAlmacenamiento,
                         ImagenUrl = dto.ImagenUrl,
                         Marca = dto.Marca,
@@ -202,7 +221,23 @@ public class ProveedorProductoController : ControllerBase
             productoExistente.PresentacionComercial = dto.PresentacionComercial;
             productoExistente.LaboratorioFabricante = dto.LaboratorioFabricante;
             productoExistente.RegistroSanitario = dto.RegistroSanitario;
-            productoExistente.FechaVencimiento = dto.FechaVencimiento;
+            
+            if (!string.IsNullOrEmpty(dto.FechaVencimiento))
+            {
+                if (DateTime.TryParse(dto.FechaVencimiento, out DateTime fechaVencimiento))
+                {
+                    productoExistente.FechaVencimiento = fechaVencimiento;
+                }
+                else
+                {
+                    return BadRequest($"El formato de fecha '{dto.FechaVencimiento}' no es válido.");
+                }
+            }
+            else
+            {
+                productoExistente.FechaVencimiento = null;
+            }
+            
             productoExistente.CondicionesAlmacenamiento = dto.CondicionesAlmacenamiento;
             productoExistente.ImagenUrl = dto.ImagenUrl;
             productoExistente.Marca = dto.Marca;
@@ -211,7 +246,6 @@ public class ProveedorProductoController : ControllerBase
             _context.Productos.Update(productoExistente);
             await _context.SaveChangesAsync();
 
-            // 2. ACTUALIZAR INVENTARIO (Tabla ProveedorProducto)
             var inventarioItem = await _context.ProveedorProducto
                 .FirstOrDefaultAsync(pp => pp.IdProveedor == idProveedor && pp.IdProducto == idProducto);
 
@@ -221,7 +255,7 @@ public class ProveedorProductoController : ControllerBase
                 return NotFound($"Inventario no encontrado para Proveedor {idProveedor} y Producto {idProducto}.");
             }
 
-            // Actualizar el Precio y Stock
+
             inventarioItem.Precio = dto.Precio;
             inventarioItem.Stock = dto.Stock;
 
@@ -230,7 +264,6 @@ public class ProveedorProductoController : ControllerBase
 
             await transaction.CommitAsync();
 
-            // Devolvemos 204 No Content para una actualización exitosa
             return NoContent();
         }
         catch (Exception ex)
@@ -333,7 +366,7 @@ public class ProveedorProductoController : ControllerBase
             .Include(pp => pp.Proveedor)
             .AsQueryable();
 
-        // Aplicar Filtros (si se proporcionan)
+        // Aplicar Filtros
         if (!string.IsNullOrWhiteSpace(nombreProducto))
         {
             query = query.Where(pp => pp.Producto.NombreProducto.ToLower().Contains(nombreProducto.ToLower()));
@@ -344,7 +377,6 @@ public class ProveedorProductoController : ControllerBase
             query = query.Where(pp => pp.Producto.PrincipioActivo.ToLower().Contains(principioActivo.ToLower()));
         }
 
-        // Si usas el campo de Laboratorio de búsqueda libre
         if (!string.IsNullOrWhiteSpace(laboratorioFabricante))
         {
             query = query.Where(pp => pp.Producto.LaboratorioFabricante.ToLower().Contains(laboratorioFabricante.ToLower()));
@@ -361,13 +393,13 @@ public class ProveedorProductoController : ControllerBase
             query = query.Where(pp => laboratoriosSeleccionados.Contains(pp.Producto.LaboratorioFabricante));
         }
 
-        // 3. Ejecutar la Consulta
+
         var inventarioCompleto = await query.ToListAsync();
 
-        // 4. Manejo de Respuesta
+
         if (!inventarioCompleto.Any())
         {
-            // Devolvemos 200 OK con una lista vacía si no hay coincidencias
+
             return Ok(new List<ProveedorProducto>());
         }
 
