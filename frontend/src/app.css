@@ -1987,6 +1987,7 @@ button:disabled,
   display: flex;
   flex-direction: column;
 }
+
 /*Alerta de seguridad*/
 .alerta-container {
   display: flex;
@@ -2011,54 +2012,190 @@ button:disabled,
 
 /* modal de comprobante*/
 .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content-comprobante {
+  background: #f0f2f5;
+  width: 90%;
+  max-width: 900px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.modal-header-elegant,
+.modal-footer-info,
+.modal-body-content {
+  padding: 15px 25px;
+}
+
+.modal-header-elegant {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ff0000;
+  color: white;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+}
+
+.summary-text {
+  text-align: center;
+  font-size: 1.1em;
+}
+
+.action-buttons-group {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+
+
+.comprobante-scroll-container {
+  max-height: 50vh;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  padding: 10px;
+  background: white;
+  margin-top: 15px;
+}
+
+
+.pagina-pedido {
+  border: 1px dashed #ccc;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.pagina-pedido:last-child {
+  margin-bottom: 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #aaa;
+}
+
+.info-vendedor {
+  width: 60%;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.info-vendedor h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.info-vendedor p {
+  margin: 1px 0;
+  font-size: 11px;
+}
+
+.info-documento {
+  width: 35%;
+  text-align: center;
+  border: 2px solid red;
+  padding: 10px;
+}
+
+.info-documento h3,
+.info-documento p {
+  margin: 5px 0;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.seccion-cliente {
+  border: 1px solid #aaa;
+  margin-top: 15px;
+}
+
+.seccion-cliente table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.seccion-cliente td {
+  padding: 4px 8px;
+}
+
+.seccion-items {
+  margin-top: 15px;
+  border: 1px solid #aaa;
+  min-height: 150px;
+}
+
+.seccion-items table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.seccion-items th,
+.seccion-items td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.seccion-items thead {
+  border-bottom: 1px solid #aaa;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 2px solid #aaa;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.totales {
+  width: 40%;
+}
+
+.totales .fila {
+  display: flex;
+  justify-content: space-between;
+}
+
+.totales .total {
+  font-weight: bold;
+}
+.modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background-color: rgba(0, 0, 0, 0.7); display: flex;
         justify-content: center; align-items: center; z-index: 1000;
     }
-    .modal-content-comprobante {
-        background: #f0f2f5; width: 90%; max-width: 900px;
-        border-radius: 8px; display: flex; flex-direction: column;
-        max-height: 90vh;
+    .modal-content {
+        position: relative; background: #f0f2f5; padding: 20px;
+        border-radius: 8px; width: 90%; max-width: 850px;
+        max-height: 90vh; overflow-y: auto;
     }
-    .modal-header-elegant, .modal-footer-info, .modal-body-content {
-        padding: 15px 25px;
+    .modal-close {
+        position: absolute; top: 10px; right: 15px; font-size: 2rem;
+        background: none; border: none; cursor: pointer; color: #555;
     }
-    .modal-header-elegant {
-        display: flex; justify-content: space-between; align-items: center;
-        background-color: #ff0000; color: white; border-top-left-radius: 8px; border-top-right-radius: 8px;
-    }
-    .close-btn { background: none; border: none; font-size: 2rem; color: white; cursor: pointer; }
-    .summary-text { text-align: center; font-size: 1.1em; }
-    .action-buttons-group { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
-    .btn-download-elegant, .btn-close-elegant { /* Añade tus estilos de botón aquí */ }
-
-    /* Contenedor del comprobante visual */
-    .comprobante-scroll-container {
-        max-height: 50vh; /* Altura máxima antes de hacer scroll */
-        overflow-y: auto;
-        border: 1px solid #ddd;
-        padding: 10px;
-        background: white;
-        margin-top: 15px;
-    }
-
-    /* Estilos del Comprobante (basados en el modelo de la imagen) */
-    .pagina-pedido { border: 1px dashed #ccc; padding: 15px; margin-bottom: 20px; }
-    .pagina-pedido:last-child { margin-bottom: 0; }
-    .header { display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 2px solid #aaa; }
-    .info-vendedor { width: 60%; font-family: 'Courier New', Courier, monospace; }
-    .info-vendedor h3 { margin: 0; font-size: 14px; }
-    .info-vendedor p { margin: 1px 0; font-size: 11px; }
-    .info-documento { width: 35%; text-align: center; border: 2px solid red; padding: 10px; }
-    .info-documento h3, .info-documento p { margin: 5px 0; font-family: 'Courier New', Courier, monospace; }
-    .seccion-cliente { border: 1px solid #aaa; margin-top: 15px; }
-    .seccion-cliente table { width: 100%; border-collapse: collapse; font-family: 'Courier New', Courier, monospace; }
-    .seccion-cliente td { padding: 4px 8px; }
-    .seccion-items { margin-top: 15px; border: 1px solid #aaa; min-height: 150px; }
-    .seccion-items table { width: 100%; border-collapse: collapse; font-family: 'Courier New', Courier, monospace; }
-    .seccion-items th, .seccion-items td { padding: 4px 8px; border-bottom: 1px solid #eee; }
-    .seccion-items thead { border-bottom: 1px solid #aaa; }
-    .footer { display: flex; justify-content: flex-end; margin-top: 15px; padding-top: 10px; border-top: 2px solid #aaa; font-family: 'Courier New', Courier, monospace; }
-    .totales { width: 40%; }
-    .totales .fila { display: flex; justify-content: space-between; }
-    .totales .total { font-weight: bold; }

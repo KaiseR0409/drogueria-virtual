@@ -6,25 +6,15 @@
     export let ordenes = [];
     const dispatch = createEventDispatcher();
 
-    let comprobanteElement: HTMLElement; 
-
+    let comprobanteElement: HTMLElement;
 
     function handleClose() {
         dispatch("close");
     }
 
-
     async function descargarPDF() {
         if (!comprobanteElement) return;
-
-
-        const botones = comprobanteElement.querySelectorAll('button');
-        botones.forEach(btn => btn.style.display = 'none');
-
-        const canvas = await html2canvas(comprobanteElement, { scale: 2 }); 
-
-        botones.forEach(btn => btn.style.display = 'block');
-
+        const canvas = await html2canvas(comprobanteElement, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
         const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -36,8 +26,6 @@
 
     const datosComprador = {
         nombre: localStorage.getItem('nombreUsuario') || 'Cliente Final',
-        rut: localStorage.getItem('rutUsuario') || 'N/A', 
-        direccion: localStorage.getItem('direccionUsuario') || 'N/A', 
     };
 </script>
 
@@ -52,8 +40,7 @@
 
         <div class="modal-body-content">
             <p class="summary-text">
-                Tus productos han sido procesados. Se generaron
-                <strong class="count">{ordenes.length}</strong> órden{ordenes.length === 1 ? "" : "es"} de compra.
+                Se generaron <strong class="count">{ordenes.length}</strong> órden{ordenes.length === 1 ? "" : "es"} de compra.
             </p>
 
             <div class="comprobante-scroll-container">
@@ -64,32 +51,15 @@
                                 <div class="info-vendedor">
                                     <h3>{orden.nombreProveedor || 'FARMACEUTICA REDFARMA LTDA.'}</h3>
                                     <p>GIRO: DISTRIBUCION DE PRODUCTOS FARMACEUTICOS</p>
-                                    <p>DIRECCION: AVENIDA COLON N 9765 B-10, HUALPEN, CHILE</p>
                                 </div>
                                 <div class="info-documento">
-                                    <p class="rut">RUT: <!-- Aquí iría el RUT del proveedor --></p>
                                     <h3>NOTA DE PEDIDO</h3>
                                     <p class="numero-pedido">{orden.idOrden}</p>
                                 </div>
                             </header>
 
                             <section class="seccion-cliente">
-                                <table>
-                                    <tbody>
-                                        <tr>
-                                            <td><strong>RAZÓN SOCIAL</strong></td>
-                                            <td>{datosComprador.nombre}</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>RUT</strong></td>
-                                            <td>{datosComprador.rut}</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>DIRECCIÓN</strong></td>
-                                            <td>{datosComprador.direccion}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <p><strong>RAZÓN SOCIAL:</strong> {datosComprador.nombre}</p>
                             </section>
                             
                             <section class="seccion-items">
@@ -106,10 +76,10 @@
                                         {#if orden.items}
                                             {#each orden.items as item}
                                                 <tr>
-                                                    <td class="descripcion">{item.name || item.nombreProducto || 'N/A'}</td>
-                                                    <td>{item.cantidad}</td>
-                                                    <td>${item.precioUnitario.toFixed(0)}</td>
-                                                    <td>${(item.cantidad * item.precioUnitario).toFixed(0)}</td>
+                                                    <td class="descripcion">{item.name || item.nombreProducto || 'Producto Desconocido'}</td>
+                                                    <td>{item.quantity || item.cantidad}</td>
+                                                    <td>${(item.price || item.precioUnitario).toFixed(0)}</td>
+                                                    <td>${((item.quantity || item.cantidad) * (item.price || item.precioUnitario)).toFixed(0)}</td>
                                                 </tr>
                                             {/each}
                                         {/if}

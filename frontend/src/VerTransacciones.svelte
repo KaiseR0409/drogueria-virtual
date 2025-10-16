@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+	import Comprobante from './Comprobante.svelte';
     import { onMount } from "svelte";
     import { checkAuth } from './auth.js';
     checkAuth();
@@ -6,20 +7,21 @@
     let historial = [];
     let idUsuario = localStorage.getItem("idUsuario");
 
-    // Variables de Filtro adaptadas
+
+    let ordenSeleccionada = null; 
+    let cargandoDetalle = false; 
     let filtroEstado = "Todos"; 
     let filtroFactura = "";
     let filtroOrden = "";
     let filtroFecha = "";
     let filtroMonto = "";
-    let filtroProveedor = ""; // Filtro nuevo
+    let filtroProveedor = ""; 
 
     let cargando = true;
     let error = null;
 
     const estadosOrden = ["Todos", "Pagada", "Pendiente"];
 
-    // --- Lógica de Paginación (sin cambios) ---
     const itemsPerPage = 8;
     let currentPage = 1;
     
@@ -34,7 +36,6 @@
     $: startIndex = (currentPage - 1) * itemsPerPage;
     $: endIndex = startIndex + itemsPerPage;
     $: historialPaginado = historialFiltrado.slice(startIndex, endIndex);
-    // -----------------------------------------
 
     async function cargarHistorial() {
         if (!idUsuario) {
@@ -46,7 +47,6 @@
         try {
             cargando = true;
             error = null;
-            // Endpoint actualizado para el historial del usuario
             const res = await fetch(`http://localhost:5029/api/Orden/mi-historial/${idUsuario}`);
             
             if (!res.ok) {
@@ -61,6 +61,30 @@
         } finally {
             cargando = false;
         }
+    }
+    async function verDetalle(idOrden: number) {
+        cargandoDetalle = true;
+        ordenSeleccionada = {}; // Abre el modal en modo "cargando"
+
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch(`http://localhost:5029/api/Orden/${idOrden}`, {
+                 headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error("No se pudo cargar el detalle de la orden.");
+
+            const data = await res.json();
+            ordenSeleccionada = data; 
+        } catch (err) {
+            alert((err as Error).message);
+            ordenSeleccionada = null; 
+        } finally {
+            cargandoDetalle = false;
+        }
+    }
+
+    function cerrarModal() {
+        ordenSeleccionada = null;
     }
 
     function formatearFecha(fechaCompleta) {
@@ -93,6 +117,21 @@
 
     onMount(cargarHistorial);
 </script>
+
+{#if ordenSeleccionada}
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="modal-overlay" on:click={cerrarModal}>
+        <div class="modal-content" on:click|stopPropagation>
+            <button class="modal-close" on:click={cerrarModal}>&times;</button>
+            {#if cargandoDetalle}
+                <p>Cargando comprobante...</p>
+            {:else}
+                <Comprobante orden={ordenSeleccionada} />
+            {/if}
+        </div>
+    </div>
+{/if}
 
 <div class="dashboard-container">
     <div class="header">
@@ -147,7 +186,9 @@
                                 </span>
                             </td>
                             <td class="acciones-celda">
-                                <button class="btn btn-primary">Ver Detalle</button>
+                               <button class="btn btn-primary" on:click={() => verDetalle(orden.idOrden)}>
+                                    Ver Detalle
+                                </button>
                             </td>
                         </tr>
                     {/each}
