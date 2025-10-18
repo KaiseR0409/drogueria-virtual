@@ -58,46 +58,57 @@
                     `Error en la solicitud: ${res.status} ${res.statusText}`,
                 );
             const data = await res.json();
+            console.log("Datos recibidos del API:", data);
+            
 
-            if (Array.isArray(data) && data.length && data[0].producto) {
-                const grouped = data.reduce((acc, item) => {
-                    const prodId = item.idProducto;
-                    if (!acc[prodId]) {
-                        const p = item.producto || {};
-                        acc[prodId] = {
-                            idProducto: item.idProducto,
-                            nombreProducto: p.nombreProducto ?? "",
-                            principioActivo: p.principioActivo ?? "",
-                            concentracion: p.concentracion ?? "",
-                            formaFarmaceutica: p.formaFarmaceutica ?? "",
-                            presentacionComercial: p.presentacionComercial ?? "",
-                            laboratorioFabricante: p.laboratorioFabricante ?? "",
-                            registroSanitario: p.registroSanitario ?? "",
-                            fechaVencimiento: p.fechaVencimiento ?? null,
-                            condicionesAlmacenamiento: p.condicionesAlmacenamiento ?? "",
-                            imagenUrl: p.imagenUrl ?? "",
-                            proveedores: [],
-                        };
-                    }
-                    acc[prodId].proveedores.push({
-                        idProveedor: item.idProveedor,
-                        nombreProveedor: item.proveedor?.nombreProveedor || `Proveedor #${item.idProveedor}`,
-                        precio: item.precio ?? 0,
-                        stock: item.stock ?? 0,
-                        __raw: item,
-                    });
-                    return acc;
-                }, {});
-                
-                products = Object.values(grouped);
-                // Opcional: Ordenar proveedores por precio (más barato primero)
-                products.forEach(p => {
-                    p.proveedores.sort((a, b) => a.precio - b.precio);
-                });
+            if (Array.isArray(data) && data.length) {
+    // Si los productos ya vienen agrupados
+    if (data[0].proveedores) {
+        products = data;
+    } else {
+        // Si vienen desagrupados (caso antiguo)
+        const grouped = data.reduce((acc, item) => {
+            const p = item.producto || item.Producto || {};
+            const prov = item.proveedor || item.Proveedor || {};
+            const prodId = p.idProducto;
 
-            } else {
-                products = [];
+            if (!prodId) return acc;
+
+            if (!acc[prodId]) {
+                acc[prodId] = {
+                    idProducto: p.idProducto,
+                    nombreProducto: p.nombreProducto ?? "",
+                    principioActivo: p.principioActivo ?? "",
+                    concentracion: p.concentracion ?? "",
+                    formaFarmaceutica: p.formaFarmaceutica ?? "",
+                    presentacionComercial: p.presentacionComercial ?? "",
+                    laboratorioFabricante: p.laboratorioFabricante ?? "",
+                    registroSanitario: p.registroSanitario ?? "",
+                    fechaVencimiento: p.fechaVencimiento ?? null,
+                    condicionesAlmacenamiento: p.condicionesAlmacenamiento ?? "",
+                    imagenUrl: p.imagenUrl ?? "",
+                    proveedores: [],
+                };
             }
+            acc[prodId].proveedores.push({
+                idProveedor: item.idProveedor,
+                nombreProveedor: prov.nombreProveedor || `Proveedor #${item.idProveedor}`,
+                precio: item.precio ?? 0,
+                stock: item.stock ?? 0,
+                __raw: item,
+            });
+            return acc;
+        }, {});
+        products = Object.values(grouped);
+    }
+
+    // ordenar proveedores
+    products.forEach(p => {
+        if (p.proveedores)
+            p.proveedores.sort((a, b) => a.precio - b.precio);
+    });
+    errMessage = "";
+}
             errMessage = "";
         } catch (error) {
             console.error(
