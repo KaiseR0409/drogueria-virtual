@@ -165,7 +165,7 @@ namespace DrogueriaAPI.Controllers
             //descontar stock
             foreach (var item in orden.Items)
             {
-                var inventario = await _context.ProveedorProducto
+                var inventario = await _context.ProveedorProductos
             .FirstOrDefaultAsync(pp =>
                 pp.IdProducto == item.IdProducto &&
                 pp.IdProveedor == orden.IdProveedor // Usa el proveedor de la orden

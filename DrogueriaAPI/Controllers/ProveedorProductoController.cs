@@ -19,7 +19,7 @@ public class ProveedorProductoController : ControllerBase
     [HttpPost("{idProveedor}/producto")]
     public async Task<IActionResult> PublicarProducto(int idProveedor, [FromBody] ProductoPublicacionDto dto)
     {
-        var proveedor = await _context.Proveedor.FindAsync(idProveedor);
+        var proveedor = await _context.Proveedores.FindAsync(idProveedor);
         if (proveedor == null)
         {
             return NotFound($"Proveedor con ID {idProveedor} no encontrado.");
@@ -59,7 +59,7 @@ public class ProveedorProductoController : ControllerBase
                 Stock = dto.Stock
             };
 
-            _context.ProveedorProducto.Add(inventario);
+            _context.ProveedorProductos.Add(inventario);
             await _context.SaveChangesAsync();
 
             await transaction.CommitAsync();
@@ -74,57 +74,65 @@ public class ProveedorProductoController : ControllerBase
             return StatusCode(500, $"Error al publicar el producto: {ex.Message}");
         }
     }
-    // POST: api/proveedor/{idProveedor}/carga-masiva
     [HttpPost("{idProveedor}/carga-masiva")]
     public async Task<IActionResult> CargaMasivaDesdeJson(int idProveedor, [FromBody] List<ProductoPublicacionDto> productosNuevos)
     {
         if (productosNuevos == null || !productosNuevos.Any())
-        {
             return BadRequest(new { mensaje = "La lista de productos no puede estar vacía." });
-        }
 
-        var proveedor = await _context.Proveedor.FindAsync(idProveedor);
+        var proveedor = await _context.Proveedores.FindAsync(idProveedor);
         if (proveedor == null)
-        {
             return NotFound($"Proveedor con ID {idProveedor} no encontrado.");
-        }
 
         using var transaction = await _context.Database.BeginTransactionAsync();
+
         try
         {
+            var nuevosProductos = new List<Producto>();
+
             foreach (var dto in productosNuevos)
             {
+                // Validar campos obligatorios
                 if (string.IsNullOrEmpty(dto.NombreProducto) || dto.Precio <= 0 || string.IsNullOrEmpty(dto.CodigoBarras))
                 {
                     await transaction.RollbackAsync();
-                    return BadRequest(new { mensaje = $"El producto '{dto.NombreProducto ?? "desconocido"}' tiene datos inválidos (nombre, precio o código de barras)." });
+                    return BadRequest(new
+                    {
+                        mensaje = $"El producto '{dto.NombreProducto ?? "desconocido"}' tiene datos inválidos (nombre, precio o código de barras)."
+                    });
                 }
+
+                // Parsear la fecha (si existe)
                 DateTime? fechaParseada = null;
                 if (!string.IsNullOrEmpty(dto.FechaVencimiento))
                 {
-                    string[] formats = { "yyyy-MM-dd", "dd/MM/yyyy", "d/M/yy", "M/d/yy" };
-
-                    if (DateTime.TryParseExact(dto.FechaVencimiento, formats,
-                                                System.Globalization.CultureInfo.InvariantCulture,
-                                                System.Globalization.DateTimeStyles.None, out DateTime fecha))
+                    string[] formatos = { "yyyy-MM-dd", "dd/MM/yyyy", "d/M/yy", "M/d/yy" };
+                    if (DateTime.TryParseExact(dto.FechaVencimiento, formatos,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None, out DateTime fecha))
                     {
                         fechaParseada = fecha;
                     }
                     else
                     {
-
                         await transaction.RollbackAsync();
-                        return BadRequest(new { mensaje = $"El formato de fecha '{dto.FechaVencimiento}' en el producto '{dto.NombreProducto}' no es válido. Use AAAA-MM-DD o DD/MM/AAAA." });
+                        return BadRequest(new
+                        {
+                            mensaje = $"El formato de fecha '{dto.FechaVencimiento}' en el producto '{dto.NombreProducto}' no es válido. Use AAAA-MM-DD o DD/MM/AAAA."
+                        });
                     }
                 }
 
+                // Buscar si el producto ya existe por código de barras
                 var productoExistente = await _context.Productos
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(p => p.CodigoBarras == dto.CodigoBarras);
 
                 Producto productoParaAsociar;
 
                 if (productoExistente == null)
                 {
+                    // Crear nuevo producto
                     var nuevoProducto = new Producto
                     {
                         NombreProducto = dto.NombreProducto,
@@ -140,7 +148,10 @@ public class ProveedorProductoController : ControllerBase
                         Marca = dto.Marca,
                         CodigoBarras = dto.CodigoBarras
                     };
+
                     _context.Productos.Add(nuevoProducto);
+                    await _context.SaveChangesAsync(); // ← Guardamos para generar el IdProducto
+                    nuevosProductos.Add(nuevoProducto);
                     productoParaAsociar = nuevoProducto;
                 }
                 else
@@ -148,37 +159,48 @@ public class ProveedorProductoController : ControllerBase
                     productoParaAsociar = productoExistente;
                 }
 
-                var inventarioExistente = await _context.ProveedorProducto
+                // Buscar si ya existe la relación en ProveedorProducto
+                var proveedorProductoExistente = await _context.ProveedorProductos
                     .FirstOrDefaultAsync(pp => pp.IdProveedor == idProveedor && pp.IdProducto == productoParaAsociar.IdProducto);
 
-                if (inventarioExistente != null)
+                if (proveedorProductoExistente != null)
                 {
-                    inventarioExistente.Precio = dto.Precio;
-                    inventarioExistente.Stock = dto.Stock;
+                    // Actualizar stock y precio
+                    proveedorProductoExistente.Precio = dto.Precio;
+                    proveedorProductoExistente.Stock = dto.Stock;
                 }
                 else
                 {
-
-                    var nuevoInventario = new ProveedorProducto
+                    // Crear nueva relación proveedor-producto
+                    var nuevoProveedorProducto = new ProveedorProducto
                     {
                         IdProveedor = idProveedor,
-                        Producto = productoParaAsociar, 
+                        IdProducto = productoParaAsociar.IdProducto,
                         Precio = dto.Precio,
                         Stock = dto.Stock
                     };
-                    _context.ProveedorProducto.Add(nuevoInventario);
+
+                    _context.ProveedorProductos.Add(nuevoProveedorProducto);
                 }
             }
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            return Ok(new { mensaje = $"{productosNuevos.Count} registros de productos han sido procesados exitosamente." });
+            return Ok(new
+            {
+                mensaje = $"{productosNuevos.Count} productos han sido cargados exitosamente para el proveedor {proveedor.NombreProveedor}.",
+                nuevosProductos = nuevosProductos.Select(p => new { p.IdProducto, p.NombreProducto })
+            });
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            return StatusCode(500, new { mensaje = "Ocurrió un error al procesar la carga masiva.", error = ex.InnerException?.Message ?? ex.Message });
+            return StatusCode(500, new
+            {
+                mensaje = "Ocurrió un error al procesar la carga masiva.",
+                error = ex.InnerException?.Message ?? ex.Message
+            });
         }
     }
 
@@ -186,7 +208,7 @@ public class ProveedorProductoController : ControllerBase
     [HttpGet("{idProveedor}/productos")]
     public async Task<ActionResult<IEnumerable<ProveedorProducto>>> GetProductosDelProveedor(int idProveedor)
     {
-        var productos = await _context.ProveedorProducto
+        var productos = await _context.ProveedorProductos
             .Where(pp => pp.IdProveedor == idProveedor)
             .Include(pp => pp.Producto)
             .ToListAsync();
@@ -246,7 +268,7 @@ public class ProveedorProductoController : ControllerBase
             _context.Productos.Update(productoExistente);
             await _context.SaveChangesAsync();
 
-            var inventarioItem = await _context.ProveedorProducto
+            var inventarioItem = await _context.ProveedorProductos
                 .FirstOrDefaultAsync(pp => pp.IdProveedor == idProveedor && pp.IdProducto == idProducto);
 
             if (inventarioItem == null)
@@ -259,7 +281,7 @@ public class ProveedorProductoController : ControllerBase
             inventarioItem.Precio = dto.Precio;
             inventarioItem.Stock = dto.Stock;
 
-            _context.ProveedorProducto.Update(inventarioItem);
+            _context.ProveedorProductos.Update(inventarioItem);
             await _context.SaveChangesAsync();
 
             await transaction.CommitAsync();
@@ -283,7 +305,7 @@ public class ProveedorProductoController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var item = await _context.ProveedorProducto
+        var item = await _context.ProveedorProductos
             .FirstOrDefaultAsync(pp => pp.IdProveedor == idProveedor && pp.IdProducto == idProducto);
 
         if (item == null)
@@ -315,7 +337,7 @@ public class ProveedorProductoController : ControllerBase
     [HttpDelete("{idProveedor}/inventario/{idProducto}")]
     public async Task<IActionResult> EliminarInventario(int idProveedor, int idProducto)
     {
-        var item = await _context.ProveedorProducto
+        var item = await _context.ProveedorProductos
             .FirstOrDefaultAsync(pp => pp.IdProveedor == idProveedor && pp.IdProducto == idProducto);
 
         if (item == null)
@@ -323,7 +345,7 @@ public class ProveedorProductoController : ControllerBase
             return NotFound("El producto ya no está en el inventario de este proveedor.");
         }
 
-        _context.ProveedorProducto.Remove(item);
+        _context.ProveedorProductos.Remove(item);
 
         try
         {
@@ -340,7 +362,7 @@ public class ProveedorProductoController : ControllerBase
     [HttpGet("{idProveedor}/producto/{idProducto}")]
     public async Task<ActionResult<ProveedorProducto>> GetInventarioItem(int idProveedor, int idProducto)
     {
-        var item = await _context.ProveedorProducto
+        var item = await _context.ProveedorProductos
             .FirstOrDefaultAsync(pp => pp.IdProveedor == idProveedor && pp.IdProducto == idProducto);
 
         if (item == null)
@@ -359,9 +381,8 @@ public class ProveedorProductoController : ControllerBase
         [FromQuery] string? formaFarmaceutica,
         [FromQuery] List<string>? laboratoriosSeleccionados) // Si los filtros son del menú
     {
-        // Consulta Base: Traer todos los items de inventario (ProveedorProducto)
-        // Incluir Producto y Proveedor para tener todos los datos anidados que el frontend necesita.
-        var query = _context.ProveedorProducto
+
+        var query = _context.ProveedorProductos
             .Include(pp => pp.Producto)
             .Include(pp => pp.Proveedor)
             .AsQueryable();
@@ -412,7 +433,7 @@ public class ProveedorProductoController : ControllerBase
         [FromQuery] string? principioActivo,
         [FromQuery] int? idProductoExcluir = null)
     {
-        var query = _context.ProveedorProducto
+        var query = _context.ProveedorProductos
             .Include(pp => pp.Producto)
             .Include(pp => pp.Proveedor)
             .Where(pp => pp.Stock > 0)

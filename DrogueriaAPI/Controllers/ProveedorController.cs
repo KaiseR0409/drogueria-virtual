@@ -33,7 +33,7 @@ namespace DrogueriaAPI.Controllers
             }
 
             // 2. Verificación: ¿Ya está registrado como proveedor?
-            var proveedorExistente = await _context.Proveedor.FindAsync(idUsuario);
+            var proveedorExistente = await _context.Proveedores.FindAsync(idUsuario);
             if (proveedorExistente != null)
             {
                 return Conflict($"El usuario con ID {idUsuario} ya está registrado como proveedor.");
@@ -52,7 +52,7 @@ namespace DrogueriaAPI.Controllers
             };
 
             // 4. Guardar en la base de datos
-            _context.Proveedor.Add(proveedor);
+            _context.Proveedores.Add(proveedor);
 
             try
             {
@@ -77,7 +77,7 @@ namespace DrogueriaAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Proveedor>> GetProveedor(int id)
         {
-            var proveedor = await _context.Proveedor.FindAsync(id);
+            var proveedor = await _context.Proveedores.FindAsync(id);
 
             if (proveedor == null)
             {
@@ -90,7 +90,7 @@ namespace DrogueriaAPI.Controllers
         [HttpGet("nombre/{nombreProveedor}")]
         public async Task<ActionResult<Proveedor>> GetProveedorByName(string nombreProveedor)
         {
-            var proveedor = await _context.Proveedor
+            var proveedor = await _context.Proveedores
                                           .FirstOrDefaultAsync(p => p.NombreProveedor == nombreProveedor);
             if (proveedor == null)
             {

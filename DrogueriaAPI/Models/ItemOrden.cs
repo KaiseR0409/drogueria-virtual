@@ -1,5 +1,7 @@
 ﻿using DrogueriaAPI.Models;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 public class ItemOrden
 {
@@ -18,6 +20,10 @@ public class ItemOrden
     public decimal Descuento { get; set; }
 
     // Relación con la cabecera (orden)
+    [JsonIgnore]
+    [ForeignKey(nameof(IdOrden))]
     public Orden Orden { get; set; }
+
+    [ForeignKey(nameof(IdProducto))]
     public Producto Producto { get; set; }
 }

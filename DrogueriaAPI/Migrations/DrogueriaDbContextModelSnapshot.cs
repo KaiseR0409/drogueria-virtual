@@ -88,6 +88,10 @@ namespace DrogueriaAPI.Migrations
             modelBuilder.Entity("DrogueriaAPI.Models.Proveedor", b =>
                 {
                     b.Property<int>("IdProveedor")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdUsuario")
                         .HasColumnType("int");
 
                     b.Property<string>("NombreProveedor")
@@ -95,7 +99,7 @@ namespace DrogueriaAPI.Migrations
 
                     b.HasKey("IdProveedor");
 
-                    b.ToTable("Proveedor");
+                    b.ToTable("Proveedores");
                 });
 
             modelBuilder.Entity("DrogueriaAPI.Models.Usuarios", b =>
@@ -135,14 +139,6 @@ namespace DrogueriaAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Password")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RazonSocial")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Rut")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Telefono")
@@ -207,7 +203,7 @@ namespace DrogueriaAPI.Migrations
 
                     b.HasIndex("ProductoIdProducto");
 
-                    b.ToTable("ItemOrden");
+                    b.ToTable("ItemsOrden", (string)null);
                 });
 
             modelBuilder.Entity("Orden", b =>
@@ -271,7 +267,9 @@ namespace DrogueriaAPI.Migrations
 
                     b.HasIndex("IdProveedor");
 
-                    b.ToTable("Orden");
+                    b.HasIndex("IdUsuario");
+
+                    b.ToTable("Ordenes");
                 });
 
             modelBuilder.Entity("ProveedorProducto", b =>
@@ -289,6 +287,9 @@ namespace DrogueriaAPI.Migrations
                     b.Property<int?>("ProductoIdProducto")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ProveedorIdProveedor")
+                        .HasColumnType("int");
+
                     b.Property<int>("Stock")
                         .HasColumnType("int");
 
@@ -298,7 +299,9 @@ namespace DrogueriaAPI.Migrations
 
                     b.HasIndex("ProductoIdProducto");
 
-                    b.ToTable("ProveedorProducto");
+                    b.HasIndex("ProveedorIdProveedor");
+
+                    b.ToTable("ProveedorProductos");
                 });
 
             modelBuilder.Entity("DrogueriaAPI.Models.Proveedor", b =>
@@ -306,7 +309,7 @@ namespace DrogueriaAPI.Migrations
                     b.HasOne("DrogueriaAPI.Models.Usuarios", "Usuario")
                         .WithOne("Proveedor")
                         .HasForeignKey("DrogueriaAPI.Models.Proveedor", "IdProveedor")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Usuario");
@@ -317,13 +320,13 @@ namespace DrogueriaAPI.Migrations
                     b.HasOne("Orden", "Orden")
                         .WithMany("Items")
                         .HasForeignKey("IdOrden")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DrogueriaAPI.Models.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("IdProducto")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DrogueriaAPI.Models.Producto", null)
@@ -343,7 +346,15 @@ namespace DrogueriaAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("DrogueriaAPI.Models.Usuarios", "Usuario")
+                        .WithMany("Ordenes")
+                        .HasForeignKey("IdUsuario")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Proveedor");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("ProveedorProducto", b =>
@@ -351,18 +362,22 @@ namespace DrogueriaAPI.Migrations
                     b.HasOne("DrogueriaAPI.Models.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("IdProducto")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DrogueriaAPI.Models.Proveedor", "Proveedor")
                         .WithMany()
                         .HasForeignKey("IdProveedor")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DrogueriaAPI.Models.Producto", null)
                         .WithMany("InventarioProveedores")
                         .HasForeignKey("ProductoIdProducto");
+
+                    b.HasOne("DrogueriaAPI.Models.Proveedor", null)
+                        .WithMany("ProveedorProductos")
+                        .HasForeignKey("ProveedorIdProveedor");
 
                     b.Navigation("Producto");
 
@@ -376,8 +391,15 @@ namespace DrogueriaAPI.Migrations
                     b.Navigation("ItemsOrden");
                 });
 
+            modelBuilder.Entity("DrogueriaAPI.Models.Proveedor", b =>
+                {
+                    b.Navigation("ProveedorProductos");
+                });
+
             modelBuilder.Entity("DrogueriaAPI.Models.Usuarios", b =>
                 {
+                    b.Navigation("Ordenes");
+
                     b.Navigation("Proveedor");
                 });
 

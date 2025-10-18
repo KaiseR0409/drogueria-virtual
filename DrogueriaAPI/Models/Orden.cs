@@ -13,6 +13,8 @@ public class Orden
 
 
     // Relación con el comprador
+    [ForeignKey("IdUsuario")]
+    public virtual Usuarios Usuario { get; set; }
     public int IdUsuario { get; set; }
 
     // Relación con el proveedor
@@ -37,5 +39,5 @@ public class Orden
 
 
     // Relación con los ítems
-    public ICollection<ItemOrden> Items { get; set; }
+    public ICollection<ItemOrden> Items { get; set; } = new List<ItemOrden>();
 }

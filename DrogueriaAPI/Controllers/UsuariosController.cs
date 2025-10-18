@@ -107,52 +107,48 @@ namespace DrogueriaAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Verificar si el nombre de usuario ya existe
+            // Validar nombre de usuario único
             var usuarioExistente = await _context.Usuarios
-                                             .FirstOrDefaultAsync(u => u.Usuario == usuario.Usuario);
+                .FirstOrDefaultAsync(u => u.Usuario == usuario.Usuario);
 
             if (usuarioExistente != null)
-            {
-                // Si el usuario ya existe, devolver un error 409 Conflict
                 return Conflict("El nombre de usuario ya está en uso.");
-            }
 
-            //Setear fechas y estado inicial
             usuario.FechaCreacion = DateTime.Now;
-            usuario.FechaActualizacion = DateTime.Now; 
+            usuario.FechaActualizacion = DateTime.Now;
             usuario.Password = BCrypt.Net.BCrypt.HashPassword(usuario.Password);
-            
+
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                //Guardar en DB
                 _context.Usuarios.Add(usuario);
                 await _context.SaveChangesAsync();
 
-                if (usuario.TipoUsuario == "Proveedor")
+                // Crear proveedor solo si corresponde
+                if (usuario.TipoUsuario.Equals("Proveedor", StringComparison.OrdinalIgnoreCase))
                 {
                     var nuevoProveedor = new Proveedor
                     {
-                        IdProveedor = usuario.IdUsuario, 
+                        IdProveedor = usuario.IdUsuario,
                         NombreProveedor = usuario.NombreUsuario,
-                        
+                        Usuario = usuario
                     };
 
-                    _context.Proveedor.Add(nuevoProveedor);
+                    _context.Proveedores.Add(nuevoProveedor);
                     await _context.SaveChangesAsync();
                 }
+
                 await transaction.CommitAsync();
                 return Ok(usuario);
-
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return StatusCode(500, "Ocurrió un error al crear el usuario: " + ex.Message);
+                return StatusCode(500, $"Ocurrió un error al crear el usuario: {ex.Message}");
             }
-
         }
+
 
         // PUT: api/usuario/5
         [HttpPut("{id}")]
@@ -241,7 +237,7 @@ namespace DrogueriaAPI.Controllers
         {
             // Encuentra todos los IDs de Productos que NO tienen ninguna entrada en la tabla ProveedorProducto
             var orphanProductIds = await _context.Productos
-                .Where(p => !_context.ProveedorProducto.Any(pp => pp.IdProducto == p.IdProducto))
+                .Where(p => !_context.ProveedorProductos.Any(pp => pp.IdProducto == p.IdProducto))
                 .Select(p => p.IdProducto)
                 .ToListAsync();
 

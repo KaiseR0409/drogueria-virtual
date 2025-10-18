@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DrogueriaAPI.Migrations
 {
     [DbContext(typeof(DrogueriaDbContext))]
-    [Migration("20251001003804_AddItemOrdenNavegaciones")]
-    partial class AddItemOrdenNavegaciones
+    [Migration("20251017234040_InitialClean")]
+    partial class InitialClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,6 +32,11 @@ namespace DrogueriaAPI.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdProducto"));
+
+                    b.Property<string>("CodigoBarras")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
 
                     b.Property<string>("Concentracion")
                         .IsRequired()
@@ -55,6 +60,10 @@ namespace DrogueriaAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Marca")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("NombreProducto")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -73,6 +82,9 @@ namespace DrogueriaAPI.Migrations
 
                     b.HasKey("IdProducto");
 
+                    b.HasIndex("CodigoBarras")
+                        .IsUnique();
+
                     b.ToTable("Producto");
                 });
 
@@ -86,7 +98,7 @@ namespace DrogueriaAPI.Migrations
 
                     b.HasKey("IdProveedor");
 
-                    b.ToTable("Proveedor");
+                    b.ToTable("Proveedores");
                 });
 
             modelBuilder.Entity("DrogueriaAPI.Models.Usuarios", b =>
@@ -97,15 +109,38 @@ namespace DrogueriaAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUsuario"));
 
+                    b.Property<string>("Correo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Direccion1")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Direccion2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Direccion3")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("EstadoUsuario")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaActualizacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("NombreUsuario")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Password")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Telefono")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -120,22 +155,6 @@ namespace DrogueriaAPI.Migrations
                     b.Property<string>("Usuario")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("direccion1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("direccion2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("direccion3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("fechaActualizacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("fechaCreacion")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("IdUsuario");
 
@@ -183,7 +202,7 @@ namespace DrogueriaAPI.Migrations
 
                     b.HasIndex("ProductoIdProducto");
 
-                    b.ToTable("ItemOrden");
+                    b.ToTable("ItemsOrden", (string)null);
                 });
 
             modelBuilder.Entity("Orden", b =>
@@ -196,6 +215,10 @@ namespace DrogueriaAPI.Migrations
 
                     b.Property<decimal>("Descuento")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("DireccionEnvioCompleta")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("EstadoOrden")
                         .IsRequired()
@@ -233,7 +256,6 @@ namespace DrogueriaAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NumeroOrdenCompra")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TipoComprobante")
@@ -242,7 +264,11 @@ namespace DrogueriaAPI.Migrations
 
                     b.HasKey("IdOrden");
 
-                    b.ToTable("Orden");
+                    b.HasIndex("IdProveedor");
+
+                    b.HasIndex("IdUsuario");
+
+                    b.ToTable("Ordenes");
                 });
 
             modelBuilder.Entity("ProveedorProducto", b =>
@@ -269,7 +295,7 @@ namespace DrogueriaAPI.Migrations
 
                     b.HasIndex("ProductoIdProducto");
 
-                    b.ToTable("ProveedorProducto");
+                    b.ToTable("ProveedorProductos");
                 });
 
             modelBuilder.Entity("DrogueriaAPI.Models.Proveedor", b =>
@@ -277,7 +303,7 @@ namespace DrogueriaAPI.Migrations
                     b.HasOne("DrogueriaAPI.Models.Usuarios", "Usuario")
                         .WithOne("Proveedor")
                         .HasForeignKey("DrogueriaAPI.Models.Proveedor", "IdProveedor")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Usuario");
@@ -288,13 +314,13 @@ namespace DrogueriaAPI.Migrations
                     b.HasOne("Orden", "Orden")
                         .WithMany("Items")
                         .HasForeignKey("IdOrden")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DrogueriaAPI.Models.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("IdProducto")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DrogueriaAPI.Models.Producto", null)
@@ -306,18 +332,37 @@ namespace DrogueriaAPI.Migrations
                     b.Navigation("Producto");
                 });
 
+            modelBuilder.Entity("Orden", b =>
+                {
+                    b.HasOne("DrogueriaAPI.Models.Proveedor", "Proveedor")
+                        .WithMany()
+                        .HasForeignKey("IdProveedor")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DrogueriaAPI.Models.Usuarios", "Usuario")
+                        .WithMany("Ordenes")
+                        .HasForeignKey("IdUsuario")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Proveedor");
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("ProveedorProducto", b =>
                 {
                     b.HasOne("DrogueriaAPI.Models.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("IdProducto")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DrogueriaAPI.Models.Proveedor", "Proveedor")
                         .WithMany()
                         .HasForeignKey("IdProveedor")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DrogueriaAPI.Models.Producto", null)
@@ -338,6 +383,8 @@ namespace DrogueriaAPI.Migrations
 
             modelBuilder.Entity("DrogueriaAPI.Models.Usuarios", b =>
                 {
+                    b.Navigation("Ordenes");
+
                     b.Navigation("Proveedor");
                 });
 

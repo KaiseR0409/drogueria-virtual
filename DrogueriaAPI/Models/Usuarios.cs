@@ -26,5 +26,8 @@ namespace DrogueriaAPI.Models
         public string Correo { get; set; }
         public string Telefono { get; set; }
         public Proveedor? Proveedor { get; set; }
+
+        [InverseProperty("Usuario")]
+        public virtual ICollection<Orden> Ordenes { get; set; } = new List<Orden>();
     }
 }
