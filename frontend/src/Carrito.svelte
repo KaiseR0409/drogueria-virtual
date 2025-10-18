@@ -166,7 +166,7 @@
             );
 
             const ordenRequest = {
-                idUsuario: Number(idUsuario) || 0,
+                idUsuario: Number(idUsuario),
                 idProveedor: Number(idProveedor),
                 montoTotal,
                 numeroFactura: "TEMP-" + Date.now(),
@@ -177,8 +177,9 @@
                 impuestos: 0,
                 descuento: 0,
                 items,
-                DireccionEnvioCompleta: direccionSeleccionada,
+                direccionEnvioCompleta: direccionSeleccionada,
             };
+            
 
             try {
                 const res = await fetch("http://localhost:5029/api/orden", {
@@ -190,22 +191,32 @@
                     body: JSON.stringify(ordenRequest),
                 });
 
+                
+                
+                
+
                 if (!res.ok) {
                     const text = await res.text();
+                    console.error("❌ Error al crear la orden:", text);
                     resultados.push({
                         idProveedor,
                         ok: false,
                         status: res.status,
                         message: text,
                     });
+                    
                 } else {
                     const dataConfirmacion = await res.json();
+                    console.log("Orden creada:", dataConfirmacion);
                     
                     const ordenEnriquecida = {
+                        idOrden: dataConfirmacion.idOrden ?? dataConfirmacion.IdOrden ?? null,
                         ...dataConfirmacion,
-                        items: itemsProveedor, 
+                        items: itemsProveedor,
                         nombreProveedor: getProveedorName(itemsProveedor[0]),
                     };
+
+
 
 
                     resultados.push({
@@ -231,12 +242,15 @@
             alert(
                 "Hubo errores al crear algunas órdenes. Revisa la consola para más detalles.",
             );
+            console.log("Resultados de la creación de órdenes:", resultados);
         } else {
             cart.set([]);
             mostrarComprobante = true;
+        
 
 
             for (const orden of ordenesConfirmadas) {
+                
                 const confirmPagoUrl = `http://localhost:5029/api/orden/${orden.idOrden}/confirmar-pago`;
 
                 const pagoRequest = {

@@ -20,7 +20,6 @@
       }
 
       const data = await res.json();
-      console.log('Login response:', data);
 
       // Guardar token y datos básicos
       localStorage.setItem("token", data.token);
