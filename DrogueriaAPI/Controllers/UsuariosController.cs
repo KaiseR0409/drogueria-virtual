@@ -55,13 +55,20 @@ namespace DrogueriaAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            // 1. Buscar el usuario en la base de datos
+
+            // Buscar el usuario en la base de datos
             var usuario = await _context.Usuarios
                 .FirstOrDefaultAsync(u => u.Usuario == request.usuario);
             
 
             if (usuario == null)
                 return Unauthorized(new { mensaje = "Usuario  nulo"});
+
+            if (string.IsNullOrWhiteSpace(request.usuario) || string.IsNullOrWhiteSpace(request.password))
+                return BadRequest(new { mensaje = "Debe ingresar usuario y contraseña." });
+
+            if (!string.Equals(usuario.EstadoUsuario, "Activo", StringComparison.OrdinalIgnoreCase))
+                return Unauthorized(new { mensaje = "El usuario no está activo. Contacte al administrador." });
 
             // validar contraseña 
             if (!BCrypt.Net.BCrypt.Verify(request.password, usuario.Password))
@@ -102,37 +109,55 @@ namespace DrogueriaAPI.Controllers
         // POST: api/Usuario
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> CrearUsuario([FromBody] Usuarios usuario)
+        public async Task<IActionResult> CrearUsuario([FromBody] AgregarUsuarioRequest dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Validar nombre de usuario único
+            // Verificar si el usuario ya existe
             var usuarioExistente = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Usuario == usuario.Usuario);
+                .FirstOrDefaultAsync(u => u.Usuario == dto.Usuario);
 
             if (usuarioExistente != null)
                 return Conflict("El nombre de usuario ya está en uso.");
-
-            usuario.FechaCreacion = DateTime.Now;
-            usuario.FechaActualizacion = DateTime.Now;
-            usuario.Password = BCrypt.Net.BCrypt.HashPassword(usuario.Password);
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                _context.Usuarios.Add(usuario);
+                // Crear usuario base
+                var nuevoUsuario = new Usuarios
+                {
+                    NombreUsuario = dto.NombreUsuario,
+                    Usuario = dto.Usuario,
+                    Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                    TipoUsuario = dto.TipoUsuario,
+                    TipoEstablecimiento = dto.TipoEstablecimiento,
+                    Direccion1 = dto.Direccion1,
+                    Direccion2 = dto.Direccion2,
+                    Direccion3 = dto.Direccion3,
+                    EstadoUsuario = "Inactivo",
+                    Correo = dto.Correo,
+                    Telefono = dto.Telefono,
+                    FechaCreacion = DateTime.Now,
+                    FechaActualizacion = DateTime.Now,
+                };
+
+                _context.Usuarios.Add(nuevoUsuario);
                 await _context.SaveChangesAsync();
 
-                // Crear proveedor solo si corresponde
-                if (usuario.TipoUsuario.Equals("Proveedor", StringComparison.OrdinalIgnoreCase))
+                // Si es proveedor, crea la relación y sus datos
+                if (dto.TipoUsuario.Equals("Proveedor", StringComparison.OrdinalIgnoreCase))
                 {
                     var nuevoProveedor = new Proveedor
                     {
-                        IdProveedor = usuario.IdUsuario,
-                        NombreProveedor = usuario.NombreUsuario,
-                        Usuario = usuario
+                        IdProveedor = nuevoUsuario.IdUsuario,
+                        NombreProveedor = dto.NombreProveedor ?? nuevoUsuario.NombreUsuario,
+                        Giro = dto.Giro,
+                        DireccionComercial = dto.DireccionComercial,
+                        Ciudad = dto.Ciudad,
+                        RUT = dto.Rut,
+                        Usuario = nuevoUsuario
                     };
 
                     _context.Proveedores.Add(nuevoProveedor);
@@ -140,12 +165,19 @@ namespace DrogueriaAPI.Controllers
                 }
 
                 await transaction.CommitAsync();
-                return Ok(usuario);
+
+                return Ok(new
+                {
+                    mensaje = "Usuario creado exitosamente.",
+                    nuevoUsuario.IdUsuario,
+                    nuevoUsuario.NombreUsuario,
+                    nuevoUsuario.TipoUsuario
+                });
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return StatusCode(500, $"Ocurrió un error al crear el usuario: {ex.Message}");
+                return StatusCode(500, new { mensaje = "Ocurrió un error al crear el usuario.", error = ex.Message });
             }
         }
 

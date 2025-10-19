@@ -4,6 +4,7 @@ using DrogueriaAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DrogueriaAPI.Migrations
 {
     [DbContext(typeof(DrogueriaDbContext))]
-    partial class DrogueriaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251018210301_AjusteProveedorFactura")]
+    partial class AjusteProveedorFactura
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -91,22 +94,10 @@ namespace DrogueriaAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("Ciudad")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DireccionComercial")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Giro")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("IdUsuario")
                         .HasColumnType("int");
 
                     b.Property<string>("NombreProveedor")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RUT")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdProveedor");

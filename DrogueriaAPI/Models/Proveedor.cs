@@ -12,6 +12,13 @@ namespace DrogueriaAPI.Models
 
         public string? NombreProveedor { get; set; }
 
+        public string? RUT { get; set; }                   // RUT tributario
+        public string? Giro { get; set; }                  // Actividad económica (ej: “Comercialización de productos farmacéuticos”)
+        public string? DireccionComercial { get; set; }    // Dirección donde emite la factura
+        public string? Ciudad { get; set; }                // Ciudad o comuna
+
+
+
         // Clave foránea explícita hacia Usuario
         public int IdUsuario { get; set; }
 
