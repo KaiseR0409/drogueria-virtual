@@ -42,12 +42,40 @@ namespace DrogueriaAPI.Controllers
             if (proveedor == null)
                 return NotFound(new { mensaje = "Proveedor no encontrado." });
 
+            // --- Calcular subtotal, IVA (19%) y total ---
+            decimal subtotal = 0;
+            decimal totalImpuestos = 0;
+            const decimal IVA_PORCENTAJE = 0.19m;
+
+            var items = new List<ItemOrden>();
+
+            foreach (var i in request.Items)
+            {
+                var sub = i.Cantidad * i.PrecioUnitario;
+                var impuesto = sub * IVA_PORCENTAJE; // 19% del subtotal de ese producto
+
+                subtotal += sub;
+                totalImpuestos += impuesto;
+
+                items.Add(new ItemOrden
+                {
+                    IdProducto = i.IdProducto,
+                    Cantidad = i.Cantidad,
+                    PrecioUnitario = i.PrecioUnitario,
+                    Impuesto = impuesto,
+                    Descuento = i.Descuento
+                });
+            }
+
+            decimal total = subtotal + totalImpuestos - request.Descuento;
+
+
             // --- Crear la entidad Orden ---
             var orden = new Orden
             {
                 IdUsuario = request.IdUsuario,
                 IdProveedor = request.IdProveedor,
-                MontoTotal = request.MontoTotal,
+                MontoTotal = request.MontoTotal ?? 0m,
                 NumeroFactura = request.NumeroFactura ?? "TEMP-" + DateTime.Now.Ticks,
                 TipoComprobante = request.TipoComprobante ?? "Boleta",
                 FechaFactura = request.FechaFactura ?? DateTime.Now,
@@ -66,7 +94,7 @@ namespace DrogueriaAPI.Controllers
                 IdProducto = i.IdProducto,
                 Cantidad = i.Cantidad,
                 PrecioUnitario = i.PrecioUnitario,
-                Impuesto = i.Impuesto,
+                Impuesto = i.PrecioUnitario * i.Cantidad * 0.19m,
                 Descuento = i.Descuento
             }).ToList();
 

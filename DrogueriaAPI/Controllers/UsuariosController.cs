@@ -55,14 +55,12 @@ namespace DrogueriaAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-
             // Buscar el usuario en la base de datos
             var usuario = await _context.Usuarios
                 .FirstOrDefaultAsync(u => u.Usuario == request.usuario);
-            
 
             if (usuario == null)
-                return Unauthorized(new { mensaje = "Usuario  nulo"});
+                return Unauthorized(new { mensaje = "Usuario  nulo" });
 
             if (string.IsNullOrWhiteSpace(request.usuario) || string.IsNullOrWhiteSpace(request.password))
                 return BadRequest(new { mensaje = "Debe ingresar usuario y contraseña." });
@@ -72,17 +70,14 @@ namespace DrogueriaAPI.Controllers
 
             // validar contraseña 
             if (!BCrypt.Net.BCrypt.Verify(request.password, usuario.Password))
-                return Unauthorized(new { mensaje = "pass incorrecta las pass ingresada es:"+usuario.Password });
+                return Unauthorized(new { mensaje = "datos incorrectos" });
 
             // generar el JWT con claims 
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, usuario.NombreUsuario),
                 new Claim("tipoUsuario", usuario.TipoUsuario.ToString()),
-
                 new Claim("idUsuario", usuario.IdUsuario.ToString()),
-                
-
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("M7f!9vB2qR#s8WxZpL6eTjQ4uKdH1mNc"));
@@ -95,6 +90,22 @@ namespace DrogueriaAPI.Controllers
                 expires: DateTime.Now.AddHours(2),
                 signingCredentials: creds
             );
+
+            // Si es proveedor, crea la respuesta con idProveedor
+            if (usuario.TipoUsuario == "Proveedor")
+            {
+                var proveedor = await _context.Proveedores
+                    .FirstOrDefaultAsync(p => p.IdUsuario == usuario.IdUsuario);
+
+                if (proveedor != null)
+                    return Ok(new
+                    {
+                        token = new JwtSecurityTokenHandler().WriteToken(token),
+                        tipoUsuario = usuario.TipoUsuario,
+                        idUsuario = usuario.IdUsuario,
+                        idProveedor = proveedor.IdProveedor
+                    });
+            }
 
             return Ok(new
             {
@@ -130,7 +141,9 @@ namespace DrogueriaAPI.Controllers
                 {
                     NombreUsuario = dto.NombreUsuario,
                     Usuario = dto.Usuario,
-                    Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                    Password = dto.Password.StartsWith("$2a$")
+                        ? dto.Password // si ya viene hasheada no la vuelve a hashear
+                        : BCrypt.Net.BCrypt.HashPassword(dto.Password),
                     TipoUsuario = dto.TipoUsuario,
                     TipoEstablecimiento = dto.TipoEstablecimiento,
                     Direccion1 = dto.Direccion1,
@@ -152,6 +165,7 @@ namespace DrogueriaAPI.Controllers
                     var nuevoProveedor = new Proveedor
                     {
                         IdProveedor = nuevoUsuario.IdUsuario,
+                        IdUsuario = nuevoUsuario.IdUsuario, 
                         NombreProveedor = dto.NombreProveedor ?? nuevoUsuario.NombreUsuario,
                         Giro = dto.Giro,
                         DireccionComercial = dto.DireccionComercial,
@@ -199,17 +213,17 @@ namespace DrogueriaAPI.Controllers
                 return NotFound();
             }
 
-            //Verificar si se proporcionó un nuevo password
-            if (!string.IsNullOrWhiteSpace(usuario.Password))
+            // Si el campo Password viene vacio o nulo se mantiene la contraseña actual
+            if (string.IsNullOrWhiteSpace(usuario.Password))
             {
-                //Encriptar la nueva contraseña
-                usuario.Password = BCrypt.Net.BCrypt.HashPassword(usuario.Password);
+                usuario.Password = usuarioExistente.Password;
             }
             else
             {
-                //Si el password está vacío en la entrada (como debería estar si no se cambia),
-                
-                usuario.Password = usuarioExistente.Password;
+                // Solo hasheamos si no está ya hasheada
+                usuario.Password = usuario.Password.StartsWith("$2a$")
+                    ? usuario.Password
+                    : BCrypt.Net.BCrypt.HashPassword(usuario.Password);
             }
 
             //Establecer la fecha de actualización

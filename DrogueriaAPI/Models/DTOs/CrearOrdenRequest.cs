@@ -5,15 +5,16 @@
         // --- Datos básicos de la orden ---
         public int IdUsuario { get; set; }
         public int IdProveedor { get; set; }
-        public decimal MontoTotal { get; set; }
+
+        public decimal? MontoTotal { get; set; } = null;
 
         // --- Datos de factura (opcionales al crear la orden) ---
-        // Estos campos se pueden completar al confirmar el pago.
         public string? NumeroFactura { get; set; } = null;
-        public string TipoComprobante { get; set; } = "Boleta"; // valor por defecto
+        public string TipoComprobante { get; set; } = "Boleta";
         public DateTime? FechaFactura { get; set; } = null;
-        public string MetodoPago { get; set; } = "Pendiente";   // por defecto
+        public string MetodoPago { get; set; } = "Pendiente";
         public string Moneda { get; set; } = "CLP";
+
         public decimal Impuestos { get; set; } = 0;
         public decimal Descuento { get; set; } = 0;
 
@@ -29,7 +30,6 @@
         public int IdProducto { get; set; }
         public int Cantidad { get; set; }
         public decimal PrecioUnitario { get; set; }
-        public decimal Impuesto { get; set; } = 0;
         public decimal Descuento { get; set; } = 0;
     }
 }
