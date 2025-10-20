@@ -228,7 +228,7 @@
                                             </div>
                                             <div class="supplier-action">
                                                 <span class="supplier-price">
-                                                    ${prov.precio?.toFixed ? prov.precio.toFixed(2) : prov.precio}
+                                                    {prov.precio.toLocaleString("es-CL", { style: "currency", currency: "CLP" })}
                                                 </span>
                                                 <button 
                                                     class="btn-add-to-cart" 

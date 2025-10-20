@@ -26,15 +26,17 @@
     let filtroStock = "";
     const itemsPerPage = 8;
     let currentPage = 1;
+    let idProveedor; 
 
     // --- FUNCIONES ---
+
 
     // Función principal para obtener datos
     function fetchProductos() {
         loading = true;
         fetchError = null;
-        const idProveedor = localStorage.getItem("idProveedor");
-
+        
+        idProveedor = localStorage.getItem("idUsuario");
         if (!idProveedor) {
             fetchError = "No se encontró al proveedor. Por favor, inicie sesión.";
             loading = false;

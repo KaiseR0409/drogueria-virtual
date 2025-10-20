@@ -1,160 +1,142 @@
-<script>
+<script lang="ts">
   import jsPDF from "jspdf";
-  import autoTable from "jspdf-autotable";
+  import html2canvas from "html2canvas";
 
-  // Recibe el objeto factura desde el backend
   export let factura;
+  let cargando = false;
 
-  function generarPDF() {
-    if (!factura) return;
+  async function generarPDF() {
+    cargando = true;
+    let facturaCompleta = factura;
 
-    const doc = new jsPDF();
-    const margenIzq = 14;
-    let y = 20;
+    try {
+      // Traer detalles completos si faltan
+      if (!factura.items || !factura.proveedor?.direccionComercial) {
+        const res = await fetch(`http://localhost:5029/api/Orden/${factura.idOrden}`);
+        if (res.ok) facturaCompleta = await res.json();
+      }
 
-    // --- ENCABEZADO ---
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text("FACTURA ELECTRÓNICA", margenIzq, y);
-    y += 10;
+      // Crear contenedor invisible
+      const temp = document.createElement("div");
+      temp.style.position = "absolute";
+      temp.style.left = "-9999px";
+      temp.innerHTML = generarHTMLFactura(facturaCompleta);
+      document.body.appendChild(temp);
 
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text("Droguería Virtual - Sistema de Ventas", margenIzq, y);
-    y += 10;
-    doc.text(
-      "Fecha Emisión: " +
-        new Date(
-          factura.fechaFactura ?? factura.fechaOrden,
-        ).toLocaleDateString(),
-      margenIzq,
-      y,
-    );
-    y += 8;
-    doc.text(
-      "Número de Factura: " + (factura.numeroFactura || "SIN NUMERO"),
-      margenIzq,
-      y,
-    );
-    y += 8;
-    doc.text("Número de Orden: " + factura.idOrden, margenIzq, y);
-    y += 8;
-    doc.text("Estado: " + (factura.estadoOrden || "Pagada"), margenIzq, y);
-    y += 10;
+      // Capturar en canvas
+      const canvas = await html2canvas(temp, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
 
-    // --- DATOS DEL CLIENTE ---
-    doc.setFont("helvetica", "bold");
-    doc.text("Datos del Cliente", margenIzq, y);
-    doc.setFont("helvetica", "normal");
-    y += 6;
-    doc.text(
-      "Nombre: " + (factura.cliente?.nombreUsuario || "Cliente Final"),
-      margenIzq,
-      y,
-    );
-    y += 6;
-    doc.text(
-      "Correo: " + (factura.cliente?.correo || "No especificado"),
-      margenIzq,
-      y,
-    );
-    y += 6;
-    doc.text(
-      "Dirección de Envío: " +
-        (factura.cliente?.direccionEnvioCompleta || "Sin dirección"),
-      margenIzq,
-      y,
-    );
-    y += 10;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-    // --- DATOS DEL PROVEEDOR ---
-    doc.setFont("helvetica", "bold");
-    doc.text("Datos del Proveedor", margenIzq, y);
-    doc.setFont("helvetica", "normal");
-    y += 6;
-    doc.text(
-      "Nombre Comercial: " +
-        (factura.proveedor?.nombreProveedor || "Proveedor Desconocido"),
-      margenIzq,
-      y,
-    );
-    y += 6;
-    doc.text("RUT: " + (factura.proveedor?.rut || "N/D"), margenIzq, y);
-    y += 6;
-    doc.text(
-      "Giro: " + (factura.proveedor?.giro || "Sin giro registrado"),
-      margenIzq,
-      y,
-    );
-    y += 6;
-    doc.text(
-      "Dirección: " +
-        (factura.proveedor?.direccionComercial || "No registrada"),
-      margenIzq,
-      y,
-    );
-    y += 6;
-    doc.text("Ciudad: " + (factura.proveedor?.ciudad || "N/D"), margenIzq, y);
-    y += 10;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`FACTURA_${facturaCompleta.numeroFactura || facturaCompleta.idOrden}.pdf`);
 
-    // --- TABLA DE PRODUCTOS ---
-    const rows = (factura.items ?? []).map((item) => [
-      item.nombreProducto ?? "Producto",
-      item.cantidad,
-      "$" + item.precioUnitario.toFixed(0),
-      "$" + (item.precioUnitario * item.cantidad).toFixed(0),
-    ]);
+      document.body.removeChild(temp);
+    } catch (err) {
+      console.error("Error generando factura PDF:", err);
+    } finally {
+      cargando = false;
+    }
+  }
 
-    autoTable(doc, {
-      startY: y,
-      head: [["Producto", "Cantidad", "Precio Unitario", "Subtotal"]],
-      body: rows,
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [40, 100, 200] },
-    });
+  function generarHTMLFactura(f) {
+    const subtotal = f.items?.reduce((acc, i) => acc + i.cantidad * i.precioUnitario, 0) || 0;
+    const iva = subtotal * 0.19;
+    const total = subtotal + iva;
 
-    const finalY = doc.lastAutoTable.finalY + 10;
+    const fecha = new Date(f.fechaFactura ?? f.fechaOrden);
+    const fechaFormateada = fecha.toLocaleDateString("es-CL");
+    const horaFormateada = fecha.toLocaleTimeString("es-CL", { hour12: false });
 
-    // --- TOTALES ---
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text(
-      "Subtotal: $" +
-        (factura.montoTotal - (factura.impuestos || 0)).toFixed(0),
-      margenIzq,
-      finalY,
-    );
-    doc.text(
-      "Impuestos: $" + (factura.impuestos || 0).toFixed(0),
-      margenIzq,
-      finalY + 6,
-    );
-    doc.text(
-      "Descuento: $" + (factura.descuento || 0).toFixed(0),
-      margenIzq,
-      finalY + 12,
-    );
-    doc.text(
-      "Total: $" + factura.montoTotal.toFixed(0),
-      margenIzq,
-      finalY + 18,
-    );
-    doc.text(
-      "Método de Pago: " + (factura.metodoPago || "No especificado"),
-      margenIzq,
-      finalY + 24,
-    );
+    return `
+      <div style="width:210mm;padding:20px;font-family:Arial,sans-serif;font-size:12px;color:#333;text-transform:uppercase;">
+        <header style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:25px;">
+          <div>
+            <h1 style="color:#cc0000;margin:0 0 10px 0;font-size:48px;font-weight:bold;">Farmacias FIM </h1>
+            <h2 style="margin:0 0 5px 0;font-size:16px;font-weight:bold;">${f.proveedor?.nombreProveedor || "PROVEEDOR"}</h2>
+            <p style="margin:3px 0;font-size:11px;">GIRO: ${f.proveedor?.giro || "SIN GIRO"}</p>
+            <p style="margin:3px 0;font-size:11px;">DIRECCIÓN: ${f.proveedor?.direccionComercial || "NO REGISTRADA"}</p>
+            <p style="margin:3px 0;font-size:11px;">CIUDAD: ${f.proveedor?.ciudad || "N/D"}</p>
+          </div>
+          <div style="border:2px solid #cc0000;padding:10px;text-align:center;min-width:200px;">
+            <p style="margin:0 0 8px 0;font-weight:bold;font-size:14px;">RUT: ${f.proveedor?.rut || "N/D"}</p>
+            <h3 style="margin:0 0 8px 0;padding:5px;font-size:14px;border:1px solid #333;">FACTURA ELECTRÓNICA</h3>
+            <p style="margin:0;font-size:18px;font-weight:bold;">${f.numeroFactura || f.idOrden}</p>
+          </div>
+        </header>
 
-    // --- PIE ---
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "italic");
-    doc.text("Gracias por su compra.", margenIzq, finalY + 40);
+        <section style="border-top:2px solid #000;border-bottom:2px solid #000;padding:10px 0;margin-bottom:25px;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <tbody>
+              <tr>
+                <td style="padding:3px 5px;width:140px;"><b>CLIENTE:</b></td>
+                <td style="padding:3px 5px;"> ${f.cliente?.nombreUsuario || "CLIENTE"}</td>
+                <td style="padding:3px 5px;width:140px;"><b>FECHA EMISIÓN:</b></td>
+                <td style="padding:3px 5px;width:150px;">${fechaFormateada} ${horaFormateada}</td>
+              </tr>
+              <tr>
+                <td style="padding:3px 5px;"><b>DIRECCIÓN:</b></td>
+                <td style="padding:3px 5px;" colspan="3">${f.cliente?.direccionEnvioCompleta || "SIN DIRECCIÓN"}</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
 
-    // Descargar PDF
-    doc.save("Factura_" + (factura.numeroFactura || factura.idOrden) + ".pdf");
+        <section>
+          <table style="width:100%;border-collapse:collapse;">
+            <thead style="background-color:#eee;">
+              <tr>
+                <th style="padding:8px;border:1px solid #000;text-align:left;">DESCRIPCIÓN</th>
+                <th style="padding:8px;border:1px solid #000;">CANTIDAD</th>
+                <th style="padding:8px;border:1px solid #000;">PRECIO UNIT.</th>
+                <th style="padding:8px;border:1px solid #000;">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(f.items || [])
+                .map(
+                  (item) => `
+                  <tr style="border-bottom:1px solid #ccc;">
+                    <td style="padding:8px;border:1px solid #000;">${item.nombreProducto}</td>
+                    <td style="padding:8px;border:1px solid #000;text-align:center;">${item.cantidad}</td>
+                    <td style="padding:8px;border:1px solid #000;text-align:right;">$${item.precioUnitario.toLocaleString("es-CL")}</td>
+                    <td style="padding:8px;border:1px solid #000;text-align:right;">$${(item.cantidad * item.precioUnitario).toLocaleString("es-CL")}</td>
+                  </tr>`
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </section>
+
+        <footer style="margin-top:25px;display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <p><b>MÉTODO DE PAGO:</b> ${f.metodoPago || "NO ESPECIFICADO"}</p>
+          </div>
+          <table style="width:280px;border-collapse:collapse;border:1px solid #000;font-size:13px;">
+            <tr>
+              <td style="padding:6px;font-weight:bold;text-align:right;">SUBTOTAL:</td>
+              <td style="padding:6px;text-align:right;">$${subtotal.toLocaleString("es-CL")}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px;font-weight:bold;text-align:right;">IVA (19%):</td>
+              <td style="padding:6px;text-align:right;">$${iva.toLocaleString("es-CL")}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px;font-weight:bold;background-color:#eee;text-align:right;">TOTAL:</td>
+              <td style="padding:6px;font-weight:bold;background-color:#eee;text-align:right;">$${total.toLocaleString("es-CL")}</td>
+            </tr>
+          </table>
+        </footer>
+
+      </div>
+    `;
   }
 </script>
 
-<button on:click={generarPDF} class="btn btn-primary">
-  💾 Descargar Factura PDF
+<button on:click={generarPDF} class="btn-descargar" disabled={cargando}>
+  {#if cargando}⏳ GENERANDO...{/if}
+  {#if !cargando}📥 DESCARGAR FACTURA PDF{/if}
 </button>

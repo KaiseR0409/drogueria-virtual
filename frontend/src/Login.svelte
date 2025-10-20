@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import { login } from './stores.js';
 
   let usuario = '';
   let password = '';
@@ -17,59 +18,20 @@
       });
       if (!res.ok) {
         throw new Error("Usuario o contraseña incorrectos");
+
       }
 
       const data = await res.json();
+              console.log("Error en login", data);
+      // normalizar idProveedor usando idUsuario si backend no lo devuelve
+      const idProv = data.idProveedor ?? data.proveedor?.idProveedor ?? data.idUsuario ?? data.id ?? null;
 
-      // Guardar token y datos básicos
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("tipoUsuario", data.tipoUsuario);
-      localStorage.setItem("nombreUsuario", data.nombreUsuario ?? data.nombre ?? '');
-      localStorage.setItem("idUsuario", data.idUsuario ?? data.id ?? '');
-
-      // intentar obtener idProveedor desde la respuesta
-      let idFromResponse =
-        data.idProveedor ||
-        data.proveedor?.idProveedor ||
-        data.proveedor?.id ||
-        data.proveedorId ||
-        null;
-
-      let nombreProveedor =
-        data.proveedor?.nombreProveedor ||
-        data.nombreProveedor ||
-        data.proveedor?.nombre ||
-        null;
-
-      // Si no llegó idProveedor, intentar buscarlo por nombre (endpoint: /api/Proveedor/nombre/{nombre})
-      if (!idFromResponse) {
-        const probeName = nombreProveedor || data.nombreUsuario || data.nombre || usuario;
-        if (probeName) {
-          try {
-            const token = data.token ? data.token : localStorage.getItem('token');
-            const r = await fetch(`http://localhost:5029/api/Proveedor/nombre/${encodeURIComponent(probeName)}`, {
-              headers: token ? { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } : { 'Accept': 'application/json' }
-            });
-            if (r.ok) {
-              const prov = await r.json();
-              // prov esperado: { idProveedor: 15, nombreProveedor: "karla" }
-              idFromResponse = prov.idProveedor ?? prov.id ?? idFromResponse;
-              nombreProveedor = prov.nombreProveedor ?? prov.nombre ?? nombreProveedor;
-            } else {
-              console.warn('Proveedor no encontrado por nombre:', probeName, 'status:', r.status);
-            }
-          } catch (err) {
-            console.error('Error buscando proveedor por nombre:', err);
-          }
-        }
-      }
-
-      if (idFromResponse) {
-        localStorage.setItem("idProveedor", String(idFromResponse));
-      }
-      if (nombreProveedor) {
-        localStorage.setItem("nombreProveedor", String(nombreProveedor));
-      }
+      login({
+        token: data.token,
+        tipoUsuario: data.tipoUsuario,
+        idUsuario: data.idUsuario ?? data.id ?? null,
+        idProveedor: idProv
+      });
 
       // Redirigir según tipo de usuario
       if (data.tipoUsuario === "Admin") {

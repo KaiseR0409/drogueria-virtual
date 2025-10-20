@@ -156,7 +156,6 @@
                 idProducto: i.idProducto ?? i.id ?? 0,
                 cantidad: Number(i.quantity ?? i.cantidad ?? 1),
                 precioUnitario: Number(i.price ?? i.precioUnitario ?? 0),
-                impuesto: Number(i.impuesto ?? 0),
                 descuento: Number(i.descuento ?? 0),
             }));
 
