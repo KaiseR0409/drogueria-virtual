@@ -7,7 +7,7 @@ using DrogueriaAPI.Models;
 namespace DrogueriaAPI.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")] // <- tu endpoint será api/orden
+    [Route("api/[controller]")] 
 
     public class OrdenController : ControllerBase
     {
@@ -19,7 +19,6 @@ namespace DrogueriaAPI.Controllers
         }
 
 
-        [HttpPost]
         [HttpPost] // POST: api/orden
         public async Task<IActionResult> CrearOrden([FromBody] CrearOrdenRequest request)
         {
@@ -75,13 +74,13 @@ namespace DrogueriaAPI.Controllers
             {
                 IdUsuario = request.IdUsuario,
                 IdProveedor = request.IdProveedor,
-                MontoTotal = request.MontoTotal ?? 0m,
+                MontoTotal = total,
                 NumeroFactura = request.NumeroFactura ?? "TEMP-" + DateTime.Now.Ticks,
                 TipoComprobante = request.TipoComprobante ?? "Boleta",
                 FechaFactura = request.FechaFactura ?? DateTime.Now,
                 MetodoPago = request.MetodoPago ?? "Pendiente",
                 Moneda = request.Moneda ?? "CLP",
-                Impuestos = request.Impuestos,
+                Impuestos = totalImpuestos,
                 Descuento = request.Descuento,
                 DireccionEnvioCompleta = request.DireccionEnvioCompleta,
                 EstadoOrden = "Pendiente",
@@ -139,6 +138,8 @@ namespace DrogueriaAPI.Controllers
                 })
             });
         }
+
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetOrden(int id)
@@ -255,6 +256,71 @@ namespace DrogueriaAPI.Controllers
                 })
             }));
         }
+
+        //este endpoint es para obtener el detalle de una factura (escalable para enviar por correo más adelante)
+        [HttpGet("detalle/{id}")]
+        public async Task<IActionResult> GetFacturaDetalle(int id)
+        {
+            var orden = await _context.Ordenes
+                .Include(o => o.Items).ThenInclude(i => i.Producto)
+                .Include(o => o.Proveedor)
+                .Include(o => o.Usuario)
+                .FirstOrDefaultAsync(o => o.IdOrden == id);
+
+            if (orden == null)
+                return NotFound(new { mensaje = "Orden no encontrada" });
+
+            //Calcular subtotal, IVA y total
+            decimal subtotal = orden.Items.Sum(i => i.Cantidad * i.PrecioUnitario);
+            decimal iva = subtotal * 0.19m;
+            decimal total = subtotal + iva - orden.Descuento;
+
+            return Ok(new
+            {
+                orden.IdOrden,
+                orden.NumeroFactura,
+                orden.TipoComprobante,
+                orden.MetodoPago,
+                orden.Moneda,
+                orden.FechaFactura,
+                orden.FechaOrden,
+                orden.EstadoOrden,
+                subtotal = subtotal.ToString("N0"),
+                iva = iva.ToString("N0"),
+                descuento = orden.Descuento.ToString("N0"),
+                total = total.ToString("N0"),
+
+                cliente = new
+                {
+                    id = orden.Usuario.IdUsuario,
+                    nombre = orden.Usuario.NombreUsuario,
+                    correo = orden.Usuario.Correo,
+                    direccionEnvioCompleta = orden.DireccionEnvioCompleta
+                },
+
+                proveedor = new
+                {
+                    idProveedor = orden.Proveedor.IdProveedor,
+                    nombreProveedor = orden.Proveedor.NombreProveedor,
+                    rut = orden.Proveedor.RUT,
+                    giro = orden.Proveedor.Giro,
+                    direccionComercial = orden.Proveedor.DireccionComercial,
+                    ciudad = orden.Proveedor.Ciudad
+                },
+
+                items = orden.Items.Select(i => new
+                {
+                    i.IdProducto,
+                    nombreProducto = i.Producto.NombreProducto,
+                    cantidad = i.Cantidad,
+                    precioUnitario = i.PrecioUnitario.ToString("N0"),
+                    subtotal = (i.Cantidad * i.PrecioUnitario).ToString("N0")
+                })
+            });
+        }
+
+
+
         // Confirmar pago y generar factura
         [HttpPut("{id}/confirmar-pago")]
         public async Task<IActionResult> ConfirmarPago(int id, [FromBody] ConfirmarPagoRequest request)
