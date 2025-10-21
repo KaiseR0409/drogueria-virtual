@@ -116,6 +116,7 @@
         .sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden));
 
     onMount(cargarHistorial);
+    console.log("Orden cargada para detalle:", ordenSeleccionada);
 </script>
 
 {#if ordenSeleccionada}
