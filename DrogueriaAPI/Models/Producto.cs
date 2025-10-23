@@ -21,6 +21,10 @@ namespace DrogueriaAPI.Models
         public required string PresentacionComercial { get; set; }
         public required string LaboratorioFabricante { get; set; }
         public required string RegistroSanitario { get; set; }
+        public string Familia { get; set; }
+        public string Clase { get; set; }
+        public string ViaAdministracion { get; set; }
+        public int RegistroISP { get; set; } // 1 o 0
         public DateTime? FechaVencimiento { get; set; }
         public required string CondicionesAlmacenamiento { get; set; }
         public string? ImagenUrl { get; set; }

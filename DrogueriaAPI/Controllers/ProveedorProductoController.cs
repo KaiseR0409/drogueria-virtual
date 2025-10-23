@@ -44,7 +44,11 @@ public class ProveedorProductoController : ControllerBase
                 CondicionesAlmacenamiento = dto.CondicionesAlmacenamiento,
                 ImagenUrl = dto.ImagenUrl, // Usar la URL devuelta por el FilesController
                 Marca = dto.Marca,
-                CodigoBarras = dto.CodigoBarras
+                CodigoBarras = dto.CodigoBarras,
+                Familia = dto.Familia,
+                Clase = dto.Clase,
+                ViaAdministracion = dto.ViaAdministracion,
+                RegistroISP = dto.RegistroISP
             };
 
             _context.Productos.Add(nuevoProducto);
@@ -106,10 +110,21 @@ public class ProveedorProductoController : ControllerBase
                 DateTime? fechaParseada = null;
                 if (!string.IsNullOrEmpty(dto.FechaVencimiento))
                 {
-                    string[] formatos = { "yyyy-MM-dd", "dd/MM/yyyy", "d/M/yy", "M/d/yy" };
-                    if (DateTime.TryParseExact(dto.FechaVencimiento, formatos,
+                    string[] formatos = { "yyyy-MM-dd",
+                                    "dd/MM/yyyy",
+                                    "d/M/yy",
+                                    "M/d/yy",
+                                    "yyyy-MM-ddTHH:mm:ss",          // ISO sin zona horaria
+                                    "yyyy-MM-ddTHH:mm:ssZ",         // ISO UTC
+                                    "yyyy-MM-ddTHH:mm:ss.fff",      // ISO con milisegundos
+                                    "yyyy-MM-ddTHH:mm:ss.fffZ"      // ISO con milisegundos UTC
+                                    };
+                    if (DateTime.TryParseExact(
+                        dto.FechaVencimiento,
+                        formatos,
                         System.Globalization.CultureInfo.InvariantCulture,
-                        System.Globalization.DateTimeStyles.None, out DateTime fecha))
+                        System.Globalization.DateTimeStyles.AdjustToUniversal,
+                        out DateTime fecha))
                     {
                         fechaParseada = fecha;
                     }
@@ -146,7 +161,11 @@ public class ProveedorProductoController : ControllerBase
                         CondicionesAlmacenamiento = dto.CondicionesAlmacenamiento,
                         ImagenUrl = dto.ImagenUrl,
                         Marca = dto.Marca,
-                        CodigoBarras = dto.CodigoBarras
+                        CodigoBarras = dto.CodigoBarras,
+                        Familia = dto.Familia,
+                        Clase = dto.Clase,
+                        ViaAdministracion = dto.ViaAdministracion,
+                        RegistroISP = dto.RegistroISP
                     };
 
                     _context.Productos.Add(nuevoProducto);
@@ -264,6 +283,11 @@ public class ProveedorProductoController : ControllerBase
             productoExistente.ImagenUrl = dto.ImagenUrl;
             productoExistente.Marca = dto.Marca;
             productoExistente.CodigoBarras = dto.CodigoBarras;
+            productoExistente.Familia = dto.Familia;
+            productoExistente.Clase = dto.Clase;
+            productoExistente.ViaAdministracion = dto.ViaAdministracion;
+            productoExistente.RegistroISP = dto.RegistroISP;
+
 
             _context.Productos.Update(productoExistente);
             await _context.SaveChangesAsync();
