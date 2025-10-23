@@ -2222,6 +2222,44 @@ button:disabled,
   color: #555;
 }
 
-.comprobante{
+.comprobante {
   text-transform: uppercase;
+}
+
+/*--- estilos de botones de edicion en el carrito ---*/
+.item-quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.qty-btn {
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.qty-btn:hover {
+  background-color: #cccccc00;
+  color: black;
+}
+
+.item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-delete-item {
+  border: none;
+  cursor: pointer;
+  color: #e74c3c;
+  font-size: 16px;
+}
+
+.btn-delete-item:hover {
+  color: #c0392b;
 }

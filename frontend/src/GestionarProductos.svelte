@@ -75,6 +75,10 @@
             "imagenUrl": "https://ejemplo.com/imagen.png",
             "marca": "MarcaGenérica",
             "codigoBarras": "7701234567890",
+            "familia": "Analgésicos",
+            "clase": "Antipirético",
+            "viaAdministracion": "Oral",
+            "registroISP": 1,
             "precio": 5.99,
             "stock": 150
         }];

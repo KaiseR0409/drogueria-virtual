@@ -23,6 +23,10 @@
         imagenUrl: "",
         precio: 0,
         stock: 0,
+        familia: "",
+        clase: "",
+        viaAdministracion: "",
+        registroISP: 0,
     });
 
     let submitting = $state(false);
@@ -48,6 +52,10 @@
                 imagenUrl: p.imagenUrl || "",
                 precio: product.precio || 0,
                 stock: product.stock || 0,
+                familia: p.familia || "",
+                clase: p.clase || "",
+                viaAdministracion: p.viaAdministracion || "",
+                registroISP: p.registroISP || 0,
             };
         }
     });
@@ -99,6 +107,10 @@
                 imagenUrl: formData.imagenUrl?.trim() || "",
                 precio: Number(formData.precio),
                 stock: Number(formData.stock),
+                familia: formData.familia.trim(),
+                clase: formData.clase.trim(),
+                viaAdministracion: formData.viaAdministracion.trim(),
+                registroISP: Number(formData.registroISP),
             };
 
             let method, url;
@@ -176,6 +188,26 @@
                 placeholder="Ej: Mantener en lugar fresco y seco"
             ></textarea>
         </label>
+    </fieldset>
+    <fieldset>
+        <legend>Clasificación del Producto</legend>
+            <div class="form-grid">
+                <label>Familia:
+                    <input type="text" bind:value={formData.familia} placeholder="Ej: Analgésicos" />
+                </label>
+                <label>Clase:
+                    <input type="text" bind:value={formData.clase} placeholder="Ej: Anti-inflamatorio" />
+                </label>
+                <label>Vía de Administración:
+                    <input type="text" bind:value={formData.viaAdministracion} placeholder="Ej: Oral, Tópica, Inyectable" />
+                </label>
+                <label>Registro ISP:
+                    <select bind:value={formData.registroISP}>
+                        <option value="1">Sí</option>
+                        <option value="0">No</option>
+                    </select>
+                </label>
+            </div>
     </fieldset>
 
     <fieldset>

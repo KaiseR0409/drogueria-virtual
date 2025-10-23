@@ -96,6 +96,59 @@
         }
     });
 
+    // --- funciones para bajar o subir cantidades ---
+    function incrementarCantidad(item) {
+        cart.update((items) => {
+            const existing = items.find(
+                (i) =>
+                    i.idProducto === item.idProducto &&
+                    i.idProveedor === item.idProveedor,
+            );
+            if (existing) existing.quantity = (existing.quantity ?? 1) + 1;
+            return [...items];
+        });
+    }
+
+    function decrementarCantidad(item) {
+        cart.update((items) => {
+            const existing = items.find(
+                (i) =>
+                    i.idProducto === item.idProducto &&
+                    i.idProveedor === item.idProveedor,
+            );
+            if (existing) {
+                if ((existing.quantity ?? 1) > 1) existing.quantity -= 1;
+                else
+                    items = items.filter(
+                        (i) =>
+                            !(
+                                i.idProducto === item.idProducto &&
+                                i.idProveedor === item.idProveedor
+                            ),
+                    );
+            }
+            return [...items];
+        });
+    }
+
+    // --- funcion eliminar producto del carrito ---
+    function eliminarProducto(item) {
+        if (
+            confirm(
+                `¿Deseas eliminar "${item.name ?? item.nombreProducto}" del carrito?`,
+            )
+        ) {
+            cart.update((items) =>
+                items.filter(
+                    (i) =>
+                        !(
+                            i.idProducto === item.idProducto &&
+                            i.idProveedor === item.idProveedor
+                        ),
+                ),
+            );
+        }
+    }
     // --- Funciones de Flujo de Compra ---
 
     function iniciarCompra() {
@@ -178,7 +231,6 @@
                 items,
                 direccionEnvioCompleta: direccionSeleccionada,
             };
-            
 
             try {
                 const res = await fetch("http://localhost:5029/api/orden", {
@@ -190,10 +242,6 @@
                     body: JSON.stringify(ordenRequest),
                 });
 
-                
-                
-                
-
                 if (!res.ok) {
                     const text = await res.text();
                     console.error("❌ Error al crear la orden:", text);
@@ -203,27 +251,26 @@
                         status: res.status,
                         message: text,
                     });
-                    
                 } else {
                     const dataConfirmacion = await res.json();
                     console.log("Orden creada:", dataConfirmacion);
-                    
+
                     const ordenEnriquecida = {
-                        idOrden: dataConfirmacion.idOrden ?? dataConfirmacion.IdOrden ?? null,
+                        idOrden:
+                            dataConfirmacion.idOrden ??
+                            dataConfirmacion.IdOrden ??
+                            null,
                         ...dataConfirmacion,
                         items: itemsProveedor,
                         nombreProveedor: getProveedorName(itemsProveedor[0]),
                     };
 
-
-
-
                     resultados.push({
                         idProveedor,
                         ok: true,
-                        data: ordenEnriquecida, 
+                        data: ordenEnriquecida,
                     });
-                    ordenesConfirmadas.push(ordenEnriquecida); 
+                    ordenesConfirmadas.push(ordenEnriquecida);
                 }
             } catch (err) {
                 resultados.push({
@@ -233,7 +280,6 @@
                 });
             }
         }
-
 
         const algunFalloEnCreacion = resultados.some((r) => !r.ok);
 
@@ -245,11 +291,8 @@
         } else {
             cart.set([]);
             mostrarComprobante = true;
-        
-
 
             for (const orden of ordenesConfirmadas) {
-                
                 const confirmPagoUrl = `http://localhost:5029/api/orden/${orden.idOrden}/confirmar-pago`;
 
                 const pagoRequest = {
@@ -304,16 +347,19 @@
                     <div class="item-details">
                         <div class="item-name">
                             {item.name ?? item.nombreProducto ?? "Producto"}
-                            <span class="item-quantity">
-                                x{item.quantity ?? item.cantidad}</span
-                            >
+                            <div class="item-quantity-controls">
+                                <button class="qty-btn" on:click={() => decrementarCantidad(item)}>-</button>
+                                <span>{item.quantity ?? item.cantidad}</span>
+                                <button class="qty-btn" on:click={() => incrementarCantidad(item)}>+</button>
+                            </div>
                         </div>
                         <div class="item-provider">
-                            de {getProveedorName(item)}
+                            Proveedor: {getProveedorName(item)}
                         </div>
                     </div>
-                    <div class="item-price">
-                        ${getItemPrice(item)}
+                    <div class="item-actions">
+                        <span class="item-price">${getItemPrice(item)}</span>
+                        <button class="btn-delete-item" on:click={() => eliminarProducto(item)}>🗑️</button>
                     </div>
                 </div>
             {/each}
