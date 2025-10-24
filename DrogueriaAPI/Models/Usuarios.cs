@@ -17,10 +17,6 @@ namespace DrogueriaAPI.Models
 
         public string TipoEstablecimiento { get; set; } // Ej: Cliente, Farmacia, etc.
 
-        public string Direccion1 { get; set; }
-        public string? Direccion2 { get; set; }
-        public string? Direccion3 { get; set; }
-
         public string EstadoUsuario { get; set; }     // Activo / Inactivo
 
         public string Correo { get; set; }
@@ -29,5 +25,7 @@ namespace DrogueriaAPI.Models
 
         [InverseProperty("Usuario")]
         public virtual ICollection<Orden> Ordenes { get; set; } = new List<Orden>();
+        public ICollection<Direccion> Direcciones { get; set; } = new List<Direccion>();
+
     }
 }

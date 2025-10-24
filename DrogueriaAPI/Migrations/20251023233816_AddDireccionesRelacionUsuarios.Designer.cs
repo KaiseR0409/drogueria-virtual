@@ -4,6 +4,7 @@ using DrogueriaAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DrogueriaAPI.Migrations
 {
     [DbContext(typeof(DrogueriaDbContext))]
-    partial class DrogueriaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251023233816_AddDireccionesRelacionUsuarios")]
+    partial class AddDireccionesRelacionUsuarios
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -190,6 +193,16 @@ namespace DrogueriaAPI.Migrations
 
                     b.Property<string>("Correo")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Direccion1")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Direccion2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Direccion3")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EstadoUsuario")

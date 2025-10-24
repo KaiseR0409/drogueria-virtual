@@ -34,12 +34,18 @@ namespace DrogueriaAPI.Controllers
             // Verificamos que el usuario y proveedor existan
             var usuario = await _context.Usuarios.FindAsync(request.IdUsuario);
             var proveedor = await _context.Proveedores.FindAsync(request.IdProveedor);
+            var direccion = await _context.Direcciones
+                .FirstOrDefaultAsync(d => d.IdDireccion == request.IdDireccion && d.IdUsuario == request.IdUsuario);
 
             if (usuario == null)
                 return NotFound(new { mensaje = "Usuario no encontrado." });
 
             if (proveedor == null)
                 return NotFound(new { mensaje = "Proveedor no encontrado." });
+            if ( direccion == null)
+            {
+                return NotFound(new { mensaje = "Direccion Principal no encontrada" });
+            }
 
             // --- Calcular subtotal, IVA (19%) y total ---
             decimal subtotal = 0;
@@ -82,7 +88,9 @@ namespace DrogueriaAPI.Controllers
                 Moneda = request.Moneda ?? "CLP",
                 Impuestos = totalImpuestos,
                 Descuento = request.Descuento,
-                DireccionEnvioCompleta = request.DireccionEnvioCompleta,
+                DireccionEnvioCompleta =
+                    $"{direccion.Calle} {direccion.NumeroCalle}, {direccion.Comuna}, {direccion.Region}" +
+                    $"{(string.IsNullOrWhiteSpace(direccion.Complemento) ? "" : ", " + direccion.Complemento)}",
                 EstadoOrden = "Pendiente",
                 FechaOrden = DateTime.Now
             };
@@ -349,7 +357,10 @@ namespace DrogueriaAPI.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { mensaje = "Pago confirmado", orden.IdOrden });
+            return Ok(new 
+            { mensaje = "Pago confirmado", orden.IdOrden, orden.NumeroFactura,
+                orden.EstadoOrden, orden.FechaFactura 
+            });
         }
 
         //  Obtener facturas por proveedor

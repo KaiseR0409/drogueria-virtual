@@ -15,6 +15,7 @@ namespace DrogueriaAPI.Data
             public DbSet<ProveedorProducto> ProveedorProductos { get; set; } 
             public DbSet<Orden> Ordenes { get; set; }
             public DbSet<ItemOrden> ItemsOrden { get; set; }
+            public DbSet<Direccion> Direcciones { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -94,6 +95,23 @@ namespace DrogueriaAPI.Data
             modelBuilder.Entity<ProveedorProducto>()
                 .Property(pp => pp.Precio)
                 .HasPrecision(18, 2);
+            // --- Direccion ---
+            modelBuilder.Entity<Usuarios>()
+                .HasMany(u => u.Direcciones)
+                .WithOne(d => d.Usuario)
+                .HasForeignKey(d => d.IdUsuario)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Direccion>(entity =>
+            {
+                entity.Property(d => d.Region).IsRequired().HasMaxLength(100);
+                entity.Property(d => d.Comuna).IsRequired().HasMaxLength(100);
+                entity.Property(d => d.Calle).IsRequired().HasMaxLength(100);
+                entity.Property(d => d.NumeroCalle).IsRequired().HasMaxLength(20);
+                entity.Property(d => d.Etiqueta).HasMaxLength(50);
+                entity.Property(d => d.Complemento).HasMaxLength(255);
+                entity.Property(d => d.EsPrincipal).HasDefaultValue(false);
+            });
         }
 
 

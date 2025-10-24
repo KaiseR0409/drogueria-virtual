@@ -18,11 +18,10 @@
         public decimal Impuestos { get; set; } = 0;
         public decimal Descuento { get; set; } = 0;
 
-        // --- Dirección de envío ---
-        public string DireccionEnvioCompleta { get; set; }
-
         // --- Lista de ítems ---
         public List<ItemOrdenRequest> Items { get; set; } = new();
+
+        public int IdDireccion { get; set; }
     }
 
     public class ItemOrdenRequest
