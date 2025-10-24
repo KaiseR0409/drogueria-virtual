@@ -1,4 +1,5 @@
 <script>
+	import DireccionesUsuario from './DireccionesUsuario.svelte';
     import Router from "svelte-spa-router";
     import Navbar from "./Navbar.svelte";
     import Home from "./Home.svelte";
@@ -18,6 +19,7 @@
         "/gestionar-productos": GestionarProductos,
         "/mis-facturas": MisFacturas,
         "/ver-transacciones": VerTransacciones,
+        "/direcciones-usuario": DireccionesUsuario,
     };
 </script>
 

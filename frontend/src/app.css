@@ -192,7 +192,6 @@ h1 {
   max-height: 200px;
   overflow-y: auto;
   padding-right: 10px;
-  /* Espacio para el scrollbar */
   padding-left: 0;
 }
 
@@ -201,7 +200,7 @@ h1 {
 }
 
 .form-check-input {
-  /* Asegura que los checkboxes sean visibles */
+
   border: 1px solid #ccc;
   cursor: pointer;
 }
@@ -2263,3 +2262,134 @@ button:disabled,
 .btn-delete-item:hover {
   color: #c0392b;
 }
+
+/*modal direcciones*/
+
+.direcciones-modal .modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  width: 90%;
+  max-width: 650px;
+  margin: auto;
+  color: #222;
+}
+
+.direcciones-modal h3 {
+  text-align: center;
+  color: #D32F2F;
+  font-weight: 600;
+  margin-bottom: 1.2rem;
+}
+
+.direcciones-modal .grid-2-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.direcciones-modal label {
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.direcciones-modal input[type="text"],
+.direcciones-modal input[type="number"] {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  color: #222;
+  transition: border-color 0.2s ease;
+}
+
+.direcciones-modal input:focus {
+  border-color: #D32F2F;
+  outline: none;
+}
+
+/* --- Checkbox de "Marcar como principal" --- */
+.direcciones-modal .form-check {
+  grid-column: 1 / span 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.direcciones-modal .form-check-input {
+  appearance: none;
+  width: 42px;
+  height: 22px;
+  background: #ccc;
+  border-radius: 30px;
+  position: relative;
+  transition: background 0.3s;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.direcciones-modal .form-check-input::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.3s;
+}
+
+.direcciones-modal .form-check-input:checked {
+  background: #D32F2F;
+}
+
+.direcciones-modal .form-check-input:checked::before {
+  transform: translateX(20px);
+}
+
+.direcciones-modal .form-check-label {
+  color: #333;
+padding-right: 30px;
+}
+
+/* --- Botones --- */
+.direcciones-modal .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.direcciones-modal .btn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.direcciones-modal .btn-cancel {
+  background: #e0e0e0;
+  border: 1px solid #ccc;
+  color: #333;
+}
+
+.direcciones-modal .btn-primary-confirm {
+  background-color: #D32F2F;
+  color: #fff;
+  border: none;
+}
+
+.direcciones-modal .btn-primary-confirm:hover {
+  background-color: #b71c1c;
+}
+

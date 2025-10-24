@@ -44,8 +44,9 @@
         }
 
         try {
+            //endpoint que devuelve las direcciones del usuario
             const res = await fetch(
-                `http://localhost:5029/api/usuario/${idUsuario}`,
+                `http://localhost:5029/api/Direcciones/usuario/${idUsuario}`,
                 {
                     headers: {
                         "Content-Type": "application/json",
@@ -54,42 +55,21 @@
                 },
             );
 
-            if (res.ok) {
-                const data = await res.json();
-                const loadedAddresses = [];
+            if (!res.ok) throw new Error("Error al obtener direcciones");
 
-                if (data.direccion1 && data.direccion1.trim() !== "") {
-                    loadedAddresses.push({
-                        key: "Direccion1",
-                        label: data.direccion1,
-                        value: data.direccion1,
-                    });
-                }
-                if (data.direccion2 && data.direccion2.trim() !== "") {
-                    loadedAddresses.push({
-                        key: "Direccion2",
-                        label: data.direccion2,
-                        value: data.direccion2,
-                    });
-                }
-                if (data.direccion3 && data.direccion3.trim() !== "") {
-                    loadedAddresses.push({
-                        key: "Direccion3",
-                        label: data.direccion3,
-                        value: data.direccion3,
-                    });
-                }
+            const direcciones = await res.json();
 
-                userAddresses = loadedAddresses;
+            // Busca la principal
+            const principal = direcciones.find((d) => d.esPrincipal);
 
-                // Establecer la primera como predeterminada
-                if (userAddresses.length > 0) {
-                    selectedAddressKey = userAddresses[0].key;
-                }
+            if (principal) {
+                userAddresses = [principal];
+                selectedAddressKey = principal.idDireccion;
             } else {
-                addressFetchError = true;
+                userAddresses = [];
             }
         } catch (error) {
+            console.error("Error cargando direcciones:", error);
             addressFetchError = true;
         } finally {
             isLoadingAddresses = false;
@@ -172,17 +152,15 @@
     async function finalizarCompra() {
         if (isProcessing) return;
 
-        const selectedAddress = userAddresses.find(
-            (addr) => addr.key === selectedAddressKey,
-        );
-        if (!selectedAddress) {
-            alert("Debe seleccionar una dirección válida.");
+        const principal = userAddresses[0]; 
+        if (!principal || !principal.idDireccion) {
+            alert(
+                "No se encontró una dirección principal válida. Revise sus direcciones.",
+            );
             return;
         }
-        const direccionSeleccionada = selectedAddress.label;
 
         const carrito = get(cart);
-
         if (!carrito || carrito.length === 0) return;
 
         isProcessing = true;
@@ -229,7 +207,7 @@
                 impuestos: 0,
                 descuento: 0,
                 items,
-                direccionEnvioCompleta: direccionSeleccionada,
+                idDireccion: principal.idDireccion, 
             };
 
             try {
@@ -244,7 +222,7 @@
 
                 if (!res.ok) {
                     const text = await res.text();
-                    console.error("❌ Error al crear la orden:", text);
+                    console.error("Error al crear la orden:", text);
                     resultados.push({
                         idProveedor,
                         ok: false,
@@ -348,9 +326,17 @@
                         <div class="item-name">
                             {item.name ?? item.nombreProducto ?? "Producto"}
                             <div class="item-quantity-controls">
-                                <button class="qty-btn" on:click={() => decrementarCantidad(item)}>-</button>
+                                <button
+                                    class="qty-btn"
+                                    on:click={() => decrementarCantidad(item)}
+                                    >-</button
+                                >
                                 <span>{item.quantity ?? item.cantidad}</span>
-                                <button class="qty-btn" on:click={() => incrementarCantidad(item)}>+</button>
+                                <button
+                                    class="qty-btn"
+                                    on:click={() => incrementarCantidad(item)}
+                                    >+</button
+                                >
                             </div>
                         </div>
                         <div class="item-provider">
@@ -359,7 +345,10 @@
                     </div>
                     <div class="item-actions">
                         <span class="item-price">${getItemPrice(item)}</span>
-                        <button class="btn-delete-item" on:click={() => eliminarProducto(item)}>🗑️</button>
+                        <button
+                            class="btn-delete-item"
+                            on:click={() => eliminarProducto(item)}>🗑️</button
+                        >
                     </div>
                 </div>
             {/each}
@@ -411,35 +400,56 @@
         >
             <div class="address-modal-content" on:click|stopPropagation>
                 <div class="modal-header-elegant">
-                    <h3 class="modal-title">Selección de Dirección de Envío</h3>
+                    <h3 class="modal-title">Confirmar Dirección de Envío</h3>
                     <button
                         class="close-btn"
                         on:click={() => (mostrarModalDireccion = false)}
-                        >&times;</button
                     >
+                        &times;
+                    </button>
                 </div>
 
                 <div class="modal-body-content">
-                    {#if userAddresses.length > 0}
-                        <h4>
-                            Direcciones disponibles ({userAddresses.length})
-                        </h4>
-                        <label for="address-select"
-                            >Selecciona dónde quieres recibir tu pedido:</label
-                        >
-
-                        <select
-                            id="address-select"
-                            bind:value={selectedAddressKey}
-                            class="address-select-box"
-                        >
-                            {#each userAddresses as addr}
-                                <option value={addr.key}>{addr.label}</option>
-                            {/each}
-                        </select>
+                    {#if isLoadingAddresses}
+                        <p>Cargando dirección principal...</p>
+                    {:else if addressFetchError}
+                        <p class="text-danger">
+                            Error al cargar dirección del usuario.
+                        </p>
+                    {:else if userAddresses.length === 0}
+                        <p>No tiene ninguna dirección principal configurada.</p>
+                        <p>
+                            Por favor, diríjase a la sección de <strong
+                                >Mis Direcciones</strong
+                            >
+                            para agregar una y marcarla como principal antes de continuar.
+                        </p>
                     {:else}
-                        <p class="no-address">
-                            No tienes direcciones de envío configuradas.
+                        <p>
+                            Esta es su <strong>dirección principal</strong> registrada:
+                        </p>
+
+                        <div class="direccion-card">
+                            <p>
+                                📍 <strong>{userAddresses[0].etiqueta}</strong
+                                ><br />
+                                {userAddresses[0].calle}
+                                {userAddresses[0].numeroCalle},<br />
+                                {userAddresses[0].comuna}, {userAddresses[0]
+                                    .region}
+                            </p>
+                            {#if userAddresses[0].complemento}
+                                <p>
+                                    Complemento: {userAddresses[0].complemento}
+                                </p>
+                            {/if}
+                        </div>
+
+                        <p class="mt-2">
+                            Si esta dirección es correcta, presione <b
+                                >“Proceder con el pago”</b
+                            >. Si desea cambiarla, edite sus direcciones y
+                            marque otra como principal.
                         </p>
                     {/if}
                 </div>
@@ -448,8 +458,10 @@
                     <button
                         class="btn btn-cancel"
                         on:click={() => (mostrarModalDireccion = false)}
-                        disabled={isProcessing}>Cancelar</button
+                        disabled={isProcessing}
                     >
+                        Cancelar
+                    </button>
                     <button
                         class="btn btn-primary-confirm"
                         on:click={() => {
@@ -461,7 +473,7 @@
                         {#if isProcessing}
                             Procesando Pago...
                         {:else}
-                            Continuar y Pagar
+                            Proceder con el Pago
                         {/if}
                     </button>
                 </div>

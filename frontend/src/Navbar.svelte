@@ -72,6 +72,13 @@
                                 ></a
                             >
                         </li>
+                        <li>
+                            <a href="#/direcciones-usuario" class="nav-link text-light>">
+                                <button class="btn btn-warning">
+                                    Mis Direcciones
+                                </button>
+                            </a>
+                        </li>
                         {#if tipoUsuario === "Administrador"}
                             <li class="nav-item">
                                 <a class="nav-link text-light" href="#/admin">
