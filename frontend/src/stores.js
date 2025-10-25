@@ -6,7 +6,10 @@ export const filters = writable({
     busquedaPrincipioActivo: '',
     busquedaLaboratorio: '',
     busquedaFormaFarmaceutica: '',
-    laboratoriosSeleccionados: []
+    laboratoriosSeleccionados: [],
+    busquedaProveedor: "",
+    proveedoresSeleccionados: []
+    
 });
 
 // --- Sesión ---
@@ -20,7 +23,7 @@ export const session = writable({
     tipoUsuario: initialTipoUsuario,
     idUsuario: initialIdUsuario,
     idProveedor: initialIdProveedor,
-    isLoggedIn: !!initialToken
+    isLoggedIn: !!initialToken,
 });
 
 /**

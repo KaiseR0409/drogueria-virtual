@@ -2,12 +2,18 @@
     import CotizacionModal from './CotizacionModal.svelte';
     import { onMount } from "svelte";
     import { cart, filters } from "./stores.js"; 
+    import { fetchWithRetry } from "./fetchWithRetry.js";
 
     let products = [];
     let errMessage = "";
 
     // conjunto de ids de tarjetas expandidas
     let expanded = new Set();
+    
+    let visibleProducts = [];
+    let cargando = false;
+    const LIMITE = 10; // número de productos a cargar inicialmente
+    let fin = false;
 
     // estados del modal 
     let mostrarCotizacionModal = false;
@@ -31,6 +37,8 @@
     // función traer productos 
     async function fetchProducts() {
         try {
+            cargando = true;
+            fin = false;
             let apiUrl = `http://localhost:5029/api/ProveedorProducto/InventarioCompletoConFiltros`;
             const params = new URLSearchParams();
             
@@ -50,66 +58,77 @@
             if ($filters.busquedaFormaFarmaceutica)
                 params.append("formaFarmaceutica", $filters.busquedaFormaFarmaceutica);
 
+            if ($filters.busquedaProveedor)
+            params.append("nombreProveedor", $filters.busquedaProveedor);
+
+            $filters.proveedoresSeleccionados.forEach((prov) =>
+            params.append("proveedoresSeleccionados", prov)
+            );
+            
             apiUrl += `?${params.toString()}`;
 
-            const res = await fetch(apiUrl);
+            const res = await fetchWithRetry(apiUrl);
             if (!res.ok)
                 throw new Error(
                     `Error en la solicitud: ${res.status} ${res.statusText}`,
                 );
             const data = await res.json();
-            console.log("Datos recibidos del API:", data);
             
 
             if (Array.isArray(data) && data.length) {
-    // Si los productos ya vienen agrupados
-    if (data[0].proveedores) {
-        products = data;
-    } else {
-        // Si vienen desagrupados (caso antiguo)
-        const grouped = data.reduce((acc, item) => {
-            const p = item.producto || item.Producto || {};
-            const prov = item.proveedor || item.Proveedor || {};
-            const prodId = p.idProducto;
+                // Si los productos ya vienen agrupados
+                if (data[0].proveedores) {
+                    products = data;
+                } else {
+                    // Si vienen desagrupados (caso antiguo)
+                    const grouped = data.reduce((acc, item) => {
+                        const p = item.producto || item.Producto || {};
+                        const prov = item.proveedor || item.Proveedor || {};
+                        const prodId = p.idProducto;
 
-            if (!prodId) return acc;
+                        if (!prodId) return acc;
 
-            if (!acc[prodId]) {
-                acc[prodId] = {
-                    idProducto: p.idProducto,
-                    nombreProducto: p.nombreProducto ?? "",
-                    principioActivo: p.principioActivo ?? "",
-                    concentracion: p.concentracion ?? "",
-                    formaFarmaceutica: p.formaFarmaceutica ?? "",
-                    presentacionComercial: p.presentacionComercial ?? "",
-                    laboratorioFabricante: p.laboratorioFabricante ?? "",
-                    registroSanitario: p.registroSanitario ?? "",
-                    fechaVencimiento: p.fechaVencimiento ?? null,
-                    condicionesAlmacenamiento: p.condicionesAlmacenamiento ?? "",
-                    imagenUrl: p.imagenUrl ?? "",
-                    proveedores: [],
-                };
+                        if (!acc[prodId]) {
+                            acc[prodId] = {
+                                idProducto: p.idProducto,
+                                nombreProducto: p.nombreProducto ?? "",
+                                principioActivo: p.principioActivo ?? "",
+                                concentracion: p.concentracion ?? "",
+                                formaFarmaceutica: p.formaFarmaceutica ?? "",
+                                presentacionComercial: p.presentacionComercial ?? "",
+                                laboratorioFabricante: p.laboratorioFabricante ?? "",
+                                registroSanitario: p.registroSanitario ?? "",
+                                fechaVencimiento: p.fechaVencimiento ?? null,
+                                condicionesAlmacenamiento: p.condicionesAlmacenamiento ?? "",
+                                imagenUrl: p.imagenUrl ?? "",
+                                proveedores: [],
+                            };
+                        }
+                        acc[prodId].proveedores.push({
+                            idProveedor: item.idProveedor,
+                            nombreProveedor: prov.nombreProveedor || `Proveedor #${item.idProveedor}`,
+                            precio: item.precio ?? 0,
+                            stock: item.stock ?? 0,
+                            __raw: item,
+                        });
+                        return acc;
+                    }, {});
+                    products = Object.values(grouped);
+                }
+
+                // ordenar proveedores
+                products.forEach(p => {
+                    if (p.proveedores)
+                        p.proveedores.sort((a, b) => a.precio - b.precio);
+                });
+
+                visibleProducts = products.slice(0, LIMITE);
+                errMessage = "";
+            } else {
+                products = [];
+                visibleProducts = [];
+                errMessage = "No se encontraron productos"
             }
-            acc[prodId].proveedores.push({
-                idProveedor: item.idProveedor,
-                nombreProveedor: prov.nombreProveedor || `Proveedor #${item.idProveedor}`,
-                precio: item.precio ?? 0,
-                stock: item.stock ?? 0,
-                __raw: item,
-            });
-            return acc;
-        }, {});
-        products = Object.values(grouped);
-    }
-
-    // ordenar proveedores
-    products.forEach(p => {
-        if (p.proveedores)
-            p.proveedores.sort((a, b) => a.precio - b.precio);
-    });
-    errMessage = "";
-}
-            errMessage = "";
         } catch (error) {
             console.error(
                 "No se pudo obtener la información de medicamentos:",
@@ -118,8 +137,30 @@
             errMessage =
                 "No se pudieron cargar los productos. Por favor, intente de nuevo más tarde.";
             products = [];
+        } finally {
+            cargando = false;
         }
     }
+
+    //cargar más productos al hacer scroll
+    function handleScroll() {
+        const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
+        if (!cargando && !fin && scrollTop + clientHeight >= scrollHeight - 100) {
+            cargarMas();
+        }
+    }
+
+    function cargarMas() {
+        if (visibleProducts.length >= products.length) {
+            fin = true;
+            return;
+        }
+        const start = visibleProducts.length;
+        const end = start + LIMITE;
+        visibleProducts = [...visibleProducts, ...products.slice(start, end)];
+    }
+
 
 
     let debounceTimer;
@@ -133,6 +174,8 @@
 
     onMount(() => {
         fetchProducts();
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
     });
     
     // para recibir el quantity del modal o usar 1 por defecto
@@ -179,12 +222,11 @@
     </div>
 {:else if products.length === 0}
     <div class="alert alert-info" role="alert">
-        No se encontraron productos que coincidan con los criterios de búsqueda.
+        No se encontraron productos.
     </div>
-
 {:else}
     <div class="product-grid">
-        {#each products as product}
+        {#each visibleProducts as product}
             {#if product.proveedores?.some(prov => prov.stock > 0)}
                 <div class="product-card">
                     <div class="card-image-wrapper">
@@ -284,6 +326,17 @@
                 </div>
             {/if}
         {/each}
+    </div>
+{/if}
+
+{#if cargando}
+    <div class="loading-indicator">
+        Cargando productos...
+    </div>
+{/if}
+{#if fin}
+    <div class="end-of-list-indicator">
+        No hay más productos para cargar.
     </div>
 {/if}
 

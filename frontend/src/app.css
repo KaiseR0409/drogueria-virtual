@@ -2392,4 +2392,10 @@ padding-right: 30px;
 .direcciones-modal .btn-primary-confirm:hover {
   background-color: #b71c1c;
 }
+.loader {
+  text-align: center;
+  padding: 20px;
+  color: #555;
+  font-style: italic;
+}
 
