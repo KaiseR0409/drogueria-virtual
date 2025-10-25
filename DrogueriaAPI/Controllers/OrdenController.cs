@@ -355,6 +355,28 @@ namespace DrogueriaAPI.Controllers
             orden.FechaFactura = DateTime.Now;
             orden.EstadoOrden = "Pagada";
 
+            foreach (var item in orden.Items)
+            {
+                var relacion = await _context.ProveedorProductos
+                    .FirstOrDefaultAsync(pp =>
+                        pp.IdProveedor == orden.IdProveedor &&
+                        pp.IdProducto == item.IdProducto);
+
+                if (relacion != null)
+                {
+                    if (relacion.Stock < item.Cantidad)
+                    {
+                        return BadRequest(new
+                        {
+                            mensaje = $"Stock insuficiente para el producto '{item.Producto?.NombreProducto}' (ID {item.IdProducto})."
+                        });
+                    }
+
+                    relacion.Stock -= item.Cantidad;
+                    _context.ProveedorProductos.Update(relacion);
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             return Ok(new 

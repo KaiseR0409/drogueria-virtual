@@ -98,5 +98,16 @@ namespace DrogueriaAPI.Controllers
             }
             return proveedor;
         }
+        // GET: api/Proveedor/Listado
+        [HttpGet("Listado")]
+        public async Task<IActionResult> GetProveedores()
+        {
+            var proveedores = await _context.Proveedores
+                .Select(p => p.NombreProveedor)
+                .Distinct()
+                .ToListAsync();
+
+            return Ok(proveedores);
+        }
     }
 }

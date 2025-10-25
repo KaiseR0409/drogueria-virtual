@@ -403,7 +403,9 @@ public class ProveedorProductoController : ControllerBase
         [FromQuery] string? principioActivo,
         [FromQuery] string? laboratorioFabricante,
         [FromQuery] string? formaFarmaceutica,
-        [FromQuery] List<string>? laboratoriosSeleccionados) // Si los filtros son del menú
+        [FromQuery] List<string>? laboratoriosSeleccionados,
+        [FromQuery] string? nombreProveedor,
+        [FromQuery] List<string>? proveedoresSeleccionados)
     {
 
         var query = _context.ProveedorProductos
@@ -436,6 +438,15 @@ public class ProveedorProductoController : ControllerBase
         if (laboratoriosSeleccionados != null && laboratoriosSeleccionados.Any())
         {
             query = query.Where(pp => laboratoriosSeleccionados.Contains(pp.Producto.LaboratorioFabricante));
+        }
+        if (!string.IsNullOrWhiteSpace(nombreProveedor))
+        {
+            query = query.Where(pp => pp.Proveedor.NombreProveedor.ToLower().Contains(nombreProveedor.ToLower()));
+        }
+
+        if (proveedoresSeleccionados != null && proveedoresSeleccionados.Any())
+        {
+            query = query.Where(pp => proveedoresSeleccionados.Contains(pp.Proveedor.NombreProveedor));
         }
 
 
