@@ -21,6 +21,7 @@ export function checkAuth(options = {}) {
 
     // Si se necesita un rol específico y el usuario no lo tiene, redirige al inicio
     if (rolRequerido && tipoUsuario !== rolRequerido) {
+        alert('No tienes permiso para acceder a esta página.');
         push('/');
     }
 }

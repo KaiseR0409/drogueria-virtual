@@ -1,8 +1,8 @@
 
 <script>
-	import Productos from './Productos.svelte';
-    import Filtros from "./Filtros.svelte";
-    import Carrito from "./Carrito.svelte";
+    import Filtros from './Filtros.svelte';
+    import Productos from './Productos.svelte';
+    import Carrito from './Carrito.svelte';
 </script>
 
 

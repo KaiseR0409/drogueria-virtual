@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Comprobante from './Comprobante.svelte';
+    import Comprobante from './Comprobante.svelte';
     import { onMount } from "svelte";
     import { checkAuth } from './auth.js';
     checkAuth();
