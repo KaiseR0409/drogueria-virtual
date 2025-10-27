@@ -1,7 +1,7 @@
 <script lang="ts">
-    import Comprobante from './Comprobante.svelte';
+    import Comprobante from '../components/Comprobante.svelte';
     import { onMount } from "svelte";
-    import { checkAuth } from './auth.js';
+    import { checkAuth } from '../logic/auth.js';
     checkAuth();
 
     let historial = [];

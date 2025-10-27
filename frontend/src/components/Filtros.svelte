@@ -1,5 +1,5 @@
 <script>
-  import { filters } from './stores.js';
+  import { filters } from '../logic/stores.js';
   import { onMount } from 'svelte';
 
   let allLaboratorios = [];

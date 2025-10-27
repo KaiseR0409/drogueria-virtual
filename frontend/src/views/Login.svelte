@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { login } from './stores.js';
+ import {login } from '../logic/auth.js';
 
   let usuario = '';
   let password = '';

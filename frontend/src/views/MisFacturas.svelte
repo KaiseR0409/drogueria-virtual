@@ -1,7 +1,7 @@
 <script>
     import { onMount } from "svelte";
-    import FacturaPreview from "./FacturaPreview.svelte";
-    import { checkAuth } from './auth.js';
+    import FacturaPreview from "../components/FacturaPreview.svelte";
+    import { checkAuth } from '../logic/auth.js';
 
     checkAuth({ rolRequerido: 'Proveedor' });
 

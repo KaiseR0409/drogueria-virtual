@@ -1,8 +1,8 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { get } from "svelte/store";
-    import ComprobanteCliente from "./ComprobanteCliente.svelte";
-    import { cart, subtotal, totalItems } from "./stores.js";
+    import ComprobanteCliente from "../components/ComprobanteCliente.svelte";
+    import { cart, subtotal, totalItems } from "../logic/stores.js";
 
     let ordenesConfirmadas = [];
     let mostrarComprobante = false;

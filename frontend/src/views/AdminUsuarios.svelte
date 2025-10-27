@@ -1,6 +1,6 @@
 <script>
     import { onMount } from "svelte";
-    import { checkAuth } from './auth.js';
+    import { checkAuth } from '../logic/auth.js';
     checkAuth({ rolRequerido: 'Administrador' });
 
     let usuarios = [];

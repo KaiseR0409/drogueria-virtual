@@ -1,8 +1,8 @@
 <script>
-    import CotizacionModal from './CotizacionModal.svelte';
+    import CotizacionModal from '../components/CotizacionModal.svelte';
     import { onMount } from "svelte";
-    import { cart, filters } from "./stores.js"; 
-    import { fetchWithRetry } from "./fetchWithRetry.js";
+    import { cart, filters } from "../logic/stores.js"; 
+    import { fetchWithRetry } from "../logic/fetchWithRetry.js";
 
     let products = [];
     let errMessage = "";

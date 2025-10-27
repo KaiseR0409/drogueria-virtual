@@ -1,8 +1,8 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import * as XLSX from 'xlsx';
-    import ProductModal from "./ProductModal.svelte";
-    import { checkAuth } from './auth.js';
+    import ProductModal from "../components/ProductModal.svelte";
+    import { checkAuth } from '../logic/auth.js';
 
     checkAuth({ rolRequerido: 'Proveedor' });
 
