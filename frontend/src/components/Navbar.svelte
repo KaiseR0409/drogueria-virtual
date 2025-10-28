@@ -67,14 +67,14 @@
                             <a
                                 style="text-decoration: none; color:"
                                 href="#/ver-transacciones"
-                                ><button class="btn btn-warning">
+                                ><button class="btn btn-warning btn-menu">
                                     Ver Transacciones</button
                                 ></a
                             >
                         </li>
-                        <li>
+                        <li class="nav-item">
                             <a href="#/direcciones-usuario" class="nav-link text-light>">
-                                <button class="btn btn-warning">
+                                <button class="btn btn-warning btn-menu">
                                     Mis Direcciones
                                 </button>
                             </a>
@@ -82,7 +82,7 @@
                         {#if tipoUsuario === "Administrador"}
                             <li class="nav-item">
                                 <a class="nav-link text-light" href="#/admin">
-                                    <button class="btn btn-warning"
+                                    <button class="btn btn-warning btn-menu"
                                         >Administra usuarios</button
                                     >
                                 </a>
@@ -92,7 +92,7 @@
                                 <a
                                     class="nav-link text-light"
                                     href="#/gestionar-productos"
-                                    ><button class="btn btn-warning">
+                                    ><button class="btn btn-warning btn-menu">
                                         Gestionar Productos
                                     </button></a
                                 >
@@ -101,7 +101,7 @@
                                 <a
                                     style="text-decoration: none; color:"
                                     href="#/mis-facturas"
-                                    ><button class="btn btn-warning">
+                                    ><button class="btn btn-warning btn-menu">
                                         Mis Facturas</button
                                     ></a
                                 >
