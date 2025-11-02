@@ -103,7 +103,7 @@ h1 {
 }
 
 .badge {
-  background-color: var(--brand-2) !important;
+  background-color: var(--color-primary) !important;
   color: white !important;
   display: inline-block;
   padding: 4px 8px;
@@ -111,6 +111,15 @@ h1 {
   font-size: 0.75em;
   font-weight: 700;
   text-transform: uppercase;
+}
+.badge.stock-bajo {
+  background-color: #dc3545 !important;
+}
+.badge.stock-medio {
+  background-color: #ffc107 !important;
+}
+.badge.stock-alto {
+  background-color: #28a745 !important;
 }
 
 .parent {

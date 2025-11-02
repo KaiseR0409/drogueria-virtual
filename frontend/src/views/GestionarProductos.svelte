@@ -74,7 +74,7 @@
             "condicionesAlmacenamiento": "Lugar fresco y seco, menor a 30°C",
             "imagenUrl": "https://ejemplo.com/imagen.png",
             "marca": "MarcaGenérica",
-            "codigoBarras": "7701234567890",
+            "codigoBarras": "770123456789",
             "familia": "Analgésicos",
             "clase": "Antipirético",
             "viaAdministracion": "Oral",
