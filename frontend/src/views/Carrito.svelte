@@ -7,6 +7,7 @@
     let ordenesConfirmadas = [];
     let mostrarComprobante = false;
     let isProcessing = false;
+    let mostrarCarritoMovil = false;
 
     let mostrarModalDireccion = false;
     let selectedAddressKey = ""; // Clave de la dirección seleccionada (e.g., 'Direccion1')
@@ -488,3 +489,6 @@
         />
     {/if}
 </div>
+
+
+
