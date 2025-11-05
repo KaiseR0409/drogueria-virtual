@@ -6,6 +6,12 @@
     import { cart, subtotal, totalItems } from '../logic/stores.js';
 
     let mostrarCarritoMovil = false;
+    let mostrarFiltrosMovil = false;
+    
+
+    function toggleFiltrosMovil() {
+        mostrarFiltrosMovil = !mostrarFiltrosMovil;
+    }
 
     function toggleCarritoMovil() {
         mostrarCarritoMovil = !mostrarCarritoMovil;
@@ -34,8 +40,21 @@
             <button class="close-mobile-cart" on:click={toggleCarritoMovil}>✕</button>
         </div>
 
-        <!-- Reutilizamos el componente existente -->
+        <!-- Reutilizar el componente existente -->
         <Carrito />
+    </div>
+{/if}
+
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="filtros-mobile-bar" on:click={toggleFiltrosMovil}>
+    <span>🔍 Filtros</span>
+    <button>{mostrarFiltrosMovil ? "▲" : "▼"}</button>
+</div>
+
+{#if mostrarFiltrosMovil}
+    <div class="filtros-mobile-panel">
+        <Filtros />
     </div>
 {/if}
 

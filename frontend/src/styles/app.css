@@ -159,7 +159,8 @@ h1 {
   grid-column: 3 / 4;
   padding-top: 20px;
   position: sticky;
-  top: 70px;                  /* Se pega desde 1rem del top */
+  top: 70px;
+  /* Se pega desde 1rem del top */
   height: fit-content;
 }
 
@@ -1390,7 +1391,8 @@ button:disabled,
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   background-color: #fff;
-  max-height: 90vh;           /* No más alto que la pantalla */
+  max-height: 90vh;
+  /* No más alto que la pantalla */
   overflow-y: auto;
 }
 
@@ -2088,18 +2090,25 @@ button:disabled,
   color: #555;
   font-style: italic;
 }
-.cart-mobile{
+
+.cart-mobile {
   display: none;
 }
 
-@media (max-width: 972px){
-  .carrito-container{
+.filtros-mobile-bar {
+  display: none;
+}
+
+@media (max-width: 972px) {
+  .carrito-container {
     display: none;
   }
-  .home-grid{
+
+  .home-grid {
     grid-template-columns: 1fr 300px;
     gap: 20px;
   }
+
   .cart-mobile {
     display: flex;
     position: fixed;
@@ -2114,7 +2123,7 @@ button:disabled,
     z-index: 999;
     box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.25);
     font-weight: bold;
-    border-top: 2px solid rgba(255,255,255,0.2);
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
   }
 
   .cart-mobile button {
@@ -2151,6 +2160,7 @@ button:disabled,
       transform: translateY(100%);
       opacity: 0;
     }
+
     to {
       transform: translateY(0);
       opacity: 1;
@@ -2176,4 +2186,77 @@ button:disabled,
     font-size: 1.5rem;
     color: #d32f2f;
   }
+
+  .filtros-container {
+    display: none !important;
+  }
+
+  /* Mostrar barra superior */
+  .filtros-mobile-bar {
+    display: flex;
+    position: fixed;
+    top: 56px;
+    left: 0;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #d32f2f;
+    color: white;
+    padding: 12px 16px;
+    font-weight: bold;
+    z-index: 999;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .filtros-mobile-bar button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+
+  /* Panel desplegable */
+  .filtros-mobile-panel {
+    position: fixed;
+    top: 52px;
+    left: 0;
+    width: 100%;
+    max-height: 80vh;
+    background-color: #b71c1c;
+    z-index: 998;
+    overflow-y: auto;
+    padding: 12px 16px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    animation: slideDown 0.3s ease;
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  body {
+    padding-top: 129px;
+  }
+  
+   .home-grid {
+    display: block;
+    width: 100%;
+    padding: 0 8px;
+  }
+
+  .productos-container {
+    width: 100%;
+    padding: 0;
+  }
+
 }
