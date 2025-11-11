@@ -45,7 +45,7 @@
 
     // Obtener las facturas de la página actual
     $: facturasPaginadas = facturasFiltradas.slice(startIndex, endIndex);
-    // ----------------------------
+
 
     async function cargarFacturas() {
         if (!idProveedor) return;

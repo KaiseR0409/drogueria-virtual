@@ -30,7 +30,7 @@
 <div class="cart-mobile" on:click={toggleCarritoMovil}>
     <div>🛒 {$totalItems} producto{ $totalItems !== 1 ? "s" : "" }</div>
     <div>Total: <strong>${$subtotal.toFixed(2)}</strong></div>
-    <button>{mostrarCarritoMovil ? "⬇️" : "⬆️"}</button>
+    <button>{mostrarCarritoMovil ? "▼" : "▲"}</button>
 </div>
 
 {#if mostrarCarritoMovil}

@@ -92,7 +92,7 @@
         return fechaCompleta.substring(0, 10);
     }
 
-    // Lógica de Filtro combinada y adaptada
+    // Lógica de Filtro combinada
     $: historialFiltrado = historial
         .filter(o => {
             const fechaFmt = formatearFecha(o.fechaOrden);
@@ -100,7 +100,7 @@
             const cumpleEstado = filtroEstado === "Todos" || o.estadoOrden === filtroEstado;
             const cumpleFactura = o.numeroFactura?.toLowerCase().includes(filtroFactura.toLowerCase());
             const cumpleOrden = o.idOrden?.toString().includes(filtroOrden.toLowerCase());
-            const cumpleProveedor = o.nombreProveedor?.toLowerCase().includes(filtroProveedor.toLowerCase()); // Lógica de filtro nueva
+            const cumpleProveedor = o.nombreProveedor?.toLowerCase().includes(filtroProveedor.toLowerCase()); 
             const cumpleFecha = fechaFmt.includes(filtroFecha);
             const cumpleMonto = o.montoTotal?.toString().includes(filtroMonto.toLowerCase());
 
@@ -116,7 +116,6 @@
         .sort((a, b) => new Date(b.fechaOrden) - new Date(a.fechaOrden));
 
     onMount(cargarHistorial);
-    console.log("Orden cargada para detalle:", ordenSeleccionada);
 </script>
 
 {#if ordenSeleccionada}

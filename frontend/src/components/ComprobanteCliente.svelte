@@ -13,7 +13,6 @@
                 const res = await fetch(`http://localhost:5029/api/Orden/detalle/${orden.idOrden}`);
                 if (res.ok) {
                     const data = await res.json();
-                    console.log("Detalles orden obtenidos:", data);
                     completas.push(data);
                 } else {
                     completas.push(orden); // fallback por si falla
@@ -128,10 +127,10 @@
 </script>
 
 <div class="comprobante-container">
-    <h3>✅ Compra realizada con éxito</h3>
+    <h3>Compra realizada con éxito</h3>
     <p>Se generaron {ordenes.length} órdenes de compra.</p>
 
     <button class="btn-descargar" on:click={descargarPDF}>
-        📥 Descargar Comprobante PDF
+        Descargar Comprobante PDF
     </button>
 </div>

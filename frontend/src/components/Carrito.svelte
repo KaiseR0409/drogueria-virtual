@@ -9,7 +9,7 @@
     let isProcessing = false;
 
     let mostrarModalDireccion = false;
-    let selectedAddressKey = ""; // Clave de la dirección seleccionada (e.g., 'Direccion1')
+    let selectedAddressKey = ""; 
 
     let userAddresses = [];
     let isLoadingAddresses = true;
@@ -19,7 +19,6 @@
     const token = localStorage.getItem("token");
     const idUsuario = localStorage.getItem("idUsuario");
 
-    // --- Funciones Auxiliares ---
 
     // Función auxiliar para obtener el nombre del proveedor
     function getProveedorName(item) {
@@ -231,7 +230,6 @@
                     });
                 } else {
                     const dataConfirmacion = await res.json();
-                    console.log("Orden creada:", dataConfirmacion);
 
                     const ordenEnriquecida = {
                         idOrden:
@@ -265,7 +263,6 @@
             alert(
                 "Hubo errores al crear algunas órdenes. Revisa la consola para más detalles.",
             );
-            console.log("Resultados de la creación de órdenes:", resultados);
         } else {
             cart.set([]);
             mostrarComprobante = true;

@@ -50,7 +50,6 @@
                 Direccion3: direccion3 || null,
                 EstadoUsuario: "Inactivo",
             };
-            console.log("Cuerpo de la solicitud:", body);
 
             // Si es proveedor, añadimos los campos extra
             if (tipoUsuario === "Proveedor") {
@@ -73,7 +72,7 @@
             }
 
             const data = await res.json();
-            mensaje = `✅ Usuario ${data.nombreUsuario} agregado correctamente.`;
+            mensaje = `Usuario ${data.nombreUsuario} agregado correctamente.`;
 
             // Limpiar campos
             nombreUsuario = "";

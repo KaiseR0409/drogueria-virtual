@@ -22,7 +22,6 @@
       }
 
       const data = await res.json();
-              console.log("Error en login", data);
       // normalizar idProveedor usando idUsuario si backend no lo devuelve
       const idProv = data.idProveedor ?? data.proveedor?.idProveedor ?? data.idUsuario ?? data.id ?? null;
 

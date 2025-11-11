@@ -8,7 +8,6 @@
     }
     let idProveedor = localStorage.getItem("idProveedor");
     let idUsuario = localStorage.getItem("idUsuario");
-    console.log("LocalStorage en Navbar:", localStorage);
 
     function logout() {
         localStorage.removeItem("token");
@@ -33,7 +32,6 @@
             nombreUsuario = localStorage.getItem("nombreUsuario");
             idProveedor = localStorage.getItem("idProveedor");
             idUsuario = localStorage.getItem("idUsuario");
-            console.log("LocalStorage actualizado en Navbar:", localStorage);
         }
         onMount(() => window.addEventListener("storage", onStorage));
         onDestroy(() => window.removeEventListener("storage", onStorage));

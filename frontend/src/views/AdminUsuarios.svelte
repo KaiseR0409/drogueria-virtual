@@ -9,7 +9,7 @@
     let mostrarModal = false;
     let usuarioAEditar = {}; // Objeto que contendrá los datos del usuario seleccionado
 
-    //NUEVA VARIABLE PARA LA CONTRASEÑA
+
     let nuevaContrasena = "";
 
     // Variables de filtro
@@ -135,7 +135,6 @@
                 tipo: "exito",
                 texto: " ¡Usuario actualizado correctamente!",
             };
-            console.log("datos del usuario", datosAEnviar);
             // Recargar la lista principal para reflejar los cambios
             await cargarUsuarios();
 
@@ -205,9 +204,9 @@
 
 <div class="dashboard-container">
     <div class="header">
-        <h2>👤 Administración de Usuarios</h2>
+        <h2>Administración de Usuarios</h2>
         <a href="#/agregar-usuario" class="btn btn-principal"
-            >➕ Agregar Usuario</a
+            > Agregar Usuario</a
         >
     </div>
 
@@ -239,7 +238,7 @@
     {#if cargando}
         <p class="loading-state">Cargando usuarios...</p>
     {:else if error}
-        <p class="error-message">⚠️ {error}</p>
+        <p class="error-message"> {error}</p>
     {:else if usuariosFiltrados.length === 0}
         <p class="empty-state">
             No se encontraron usuarios que coincidan con los filtros.
@@ -342,7 +341,7 @@
         <div class="modal modal-default">
             <div class="modal-header">
                 <h3 class="modal-title">
-                    🖊️ Editar Usuario: {usuarioAEditar.nombreUsuario}
+                    Editar Usuario: {usuarioAEditar.nombreUsuario}
                 </h3>
                 <button
                     class="modal-close"
@@ -474,7 +473,7 @@
                     {#if mensajeModal.texto}
                         <p class="alert alert-{mensajeModal.tipo} alert-modal">
                             {#if mensajeModal.tipo === "cargando"}
-                                <span>🔄 {mensajeModal.texto}</span>
+                                <span> {mensajeModal.texto}</span>
                             {:else if mensajeModal.tipo === "exito"}
                                 <span>{mensajeModal.texto}</span>
                             {:else}

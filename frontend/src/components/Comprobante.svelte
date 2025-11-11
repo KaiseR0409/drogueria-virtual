@@ -4,7 +4,6 @@
 
     export let orden: any;
     let comprobanteElement: HTMLElement;
-    console.log("Orden recibida en Comprobante.svelte:", orden);
 
     async function descargarPDF() {
         if (!comprobanteElement) return;

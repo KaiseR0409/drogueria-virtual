@@ -160,7 +160,6 @@ h1 {
   padding-top: 20px;
   position: sticky;
   top: 70px;
-  /* Se pega desde 1rem del top */
   height: fit-content;
 }
 
@@ -1392,7 +1391,6 @@ button:disabled,
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   background-color: #fff;
   max-height: 90vh;
-  /* No más alto que la pantalla */
   overflow-y: auto;
 }
 
@@ -2191,7 +2189,6 @@ button:disabled,
     display: none !important;
   }
 
-  /* Mostrar barra superior */
   .filtros-mobile-bar {
     display: flex;
     position: fixed;
@@ -2216,7 +2213,6 @@ button:disabled,
     cursor: pointer;
   }
 
-  /* Panel desplegable */
   .filtros-mobile-panel {
     position: fixed;
     top: 52px;
