@@ -25,24 +25,24 @@ namespace DrogueriaAPI.Controllers
         [HttpPost("registrar/{idUsuario}")]
         public async Task<IActionResult> RegistrarProveedor(int idUsuario, [FromBody] ProveedorCreationDto proveedorDto)
         {
-            // 1. Verificación: ¿Existe el usuario base?
+            
             var usuario = await _context.Usuarios.FindAsync(idUsuario);
             if (usuario == null)
             {
                 return NotFound($"El usuario con ID {idUsuario} no existe.");
             }
 
-            // 2. Verificación: ¿Ya está registrado como proveedor?
+            
             var proveedorExistente = await _context.Proveedores.FindAsync(idUsuario);
             if (proveedorExistente != null)
             {
                 return Conflict($"El usuario con ID {idUsuario} ya está registrado como proveedor.");
             }
 
-            // 3. Crear el objeto Proveedor (Usando la clave compartida)
+            // Crear el objeto Proveedor (Usando la clave compartida)
             var proveedor = new Proveedor
             {
-                // CRÍTICO: IdProveedor toma el mismo valor que IdUsuario
+                
                 IdProveedor = idUsuario,
 
                 // Lógica de nombre
@@ -51,17 +51,17 @@ namespace DrogueriaAPI.Controllers
                                         : proveedorDto.NombreProveedor
             };
 
-            // 4. Guardar en la base de datos
+            
             _context.Proveedores.Add(proveedor);
 
             try
             {
-                await _context.SaveChangesAsync(); // <-- 1. Inserta el registro en Proveedor
+                await _context.SaveChangesAsync(); 
 
-                // Actualizar el TipoUsuario en la tabla Usuarios
+               
                 usuario.TipoUsuario = "Proveedor";
                 _context.Entry(usuario).State = EntityState.Modified;
-                await _context.SaveChangesAsync(); // <-- 2. Actualiza el estado en Usuarios
+                await _context.SaveChangesAsync(); 
 
                 // Devuelve 201 Created
                 return CreatedAtAction(nameof(GetProveedor), new { id = proveedor.IdProveedor }, proveedor);

@@ -210,7 +210,6 @@ namespace DrogueriaAPI.Controllers
 
         // Obtener todas las órdenes
         [HttpGet]
-        [HttpGet]
         public async Task<IActionResult> GetOrdenes()
         {
             var ordenes = await _context.Ordenes

@@ -42,7 +42,7 @@ public class ProveedorProductoController : ControllerBase
                     ? fechaVencimiento
                     : (DateTime?)null,
                 CondicionesAlmacenamiento = dto.CondicionesAlmacenamiento,
-                ImagenUrl = dto.ImagenUrl, // Usar la URL devuelta por el FilesController
+                ImagenUrl = dto.ImagenUrl, // Usar la URL 
                 Marca = dto.Marca,
                 CodigoBarras = dto.CodigoBarras,
                 Familia = dto.Familia,
@@ -169,7 +169,7 @@ public class ProveedorProductoController : ControllerBase
                     };
 
                     _context.Productos.Add(nuevoProducto);
-                    await _context.SaveChangesAsync(); // ← Guardamos para generar el IdProducto
+                    await _context.SaveChangesAsync(); //Guardamos para generar el IdProducto
                     nuevosProductos.Add(nuevoProducto);
                     productoParaAsociar = nuevoProducto;
                 }
