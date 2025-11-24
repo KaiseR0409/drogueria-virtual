@@ -175,27 +175,7 @@
         }
     }
 
-    // Lógica existente para eliminar (mantener)
-    async function eliminarUsuario(usuario) {
-        if (
-            !confirm(
-                `¿Estás seguro de eliminar al usuario ${usuario.nombreUsuario}?`,
-            )
-        ) {
-            return;
-        }
-        try {
-            const res = await fetch(
-                `http://localhost:5029/api/Usuario/${usuario.idUsuario}`,
-                { method: "DELETE" },
-            );
-            if (!res.ok) throw new Error("Error al eliminar usuario");
-            await cargarUsuarios();
-        } catch (e) {
-            console.error("Error en la solicitud DELETE:", e);
-            error = "No se pudo eliminar el usuario.";
-        }
-    }
+    
 
     onMount(() => {
         cargarUsuarios();
@@ -294,12 +274,7 @@
                                 >
                                     Editar
                                 </button>
-                                <button
-                                    class="btn-danger btn-accion"
-                                    on:click={() => eliminarUsuario(u)}
-                                >
-                                    Eliminar
-                                </button>
+                               
                             </td>
                         </tr>
                     {/each}
@@ -440,35 +415,7 @@
                         />
                     </div>
 
-                    <div class="grid-2-cols mb-3">
-                        <div>
-                            <label for="direccion1">Dirección 1</label>
-                            <input
-                                id="direccion1"
-                                type="text"
-                                class="form-control"
-                                bind:value={usuarioAEditar.direccion1}
-                            />
-                        </div>
-                        <div>
-                            <label for="direccion2">Dirección 2</label>
-                            <input
-                                id="direccion2"
-                                type="text"
-                                class="form-control"
-                                bind:value={usuarioAEditar.direccion2}
-                            />
-                        </div>
-                        <div class="full-width">
-                            <label for="direccion3">Dirección 3</label>
-                            <input
-                                id="direccion3"
-                                type="text"
-                                class="form-control"
-                                bind:value={usuarioAEditar.direccion3}
-                            />
-                        </div>
-                    </div>
+                    
 
                     {#if mensajeModal.texto}
                         <p class="alert alert-{mensajeModal.tipo} alert-modal">

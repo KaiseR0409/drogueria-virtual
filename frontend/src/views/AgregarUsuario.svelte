@@ -45,13 +45,10 @@
                 tipoEstablecimiento: tipoEstablecimiento,
                 Correo: correo,
                 Telefono: telefono,
-                Direccion1: direccion1,
-                Direccion2: direccion2 || null,
-                Direccion3: direccion3 || null,
                 EstadoUsuario: "Inactivo",
             };
 
-            // Si es proveedor, añadimos los campos extra
+            
             if (tipoUsuario === "Proveedor") {
                 body.NombreProveedor = nombreProveedor;
                 body.Rut = rut;
@@ -81,9 +78,6 @@
             tipoUsuario = "Cliente";
             correo = "";
             telefono = "";
-            direccion1 = "";
-            direccion2 = "";
-            direccion3 = "";
             nombreProveedor = "";
             rut = "";
             giro = "";
@@ -236,27 +230,6 @@
 
         <hr />
 
-        <div class="mb-3">
-            <label class="form-label"
-                >Dirección 1 *Dirección Principal y obligatoria*
-            </label>
-            <input
-                type="text"
-                class="form-control"
-                bind:value={direccion1}
-                required
-            />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Dirección 2 (opcional)</label>
-            <input type="text" class="form-control" bind:value={direccion2} />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Dirección 3 (opcional)</label>
-            <input type="text" class="form-control" bind:value={direccion3} />
-        </div>
 
         <button type="submit" class="btn btn-primary">Agregar Usuario</button>
     </form>
