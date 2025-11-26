@@ -8,6 +8,14 @@
   let direccionEditando = null;
   let mostrarModal = false;
   let esNueva = false;
+  let errores = {
+    etiqueta: false,
+    region: false,
+    comuna: false,
+    calle: false,
+    numeroCalle: false,
+    complemento: false
+  };
 
   const idUsuario = localStorage.getItem("idUsuario");
   const token = localStorage.getItem("token");
@@ -15,12 +23,15 @@
   async function cargarDirecciones() {
     cargando = true;
     try {
-      const res = await fetch(`http://localhost:5029/api/Direcciones/usuario/${idUsuario}`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        }
-      });
+      const res = await fetch(
+        `http://localhost:5029/api/Direcciones/usuario/${idUsuario}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        },
+      );
       if (!res.ok) throw new Error("Error al obtener direcciones");
       direcciones = await res.json();
     } catch (err) {
@@ -40,13 +51,27 @@
           calle: "",
           numeroCalle: "",
           complemento: "",
-          esPrincipal: false
+          esPrincipal: false,
         };
     esNueva = !d;
     mostrarModal = true;
   }
+  function validarCampos() {
+    errores.etiqueta = !direccionEditando.etiqueta?.trim();
+    errores.region = !direccionEditando.region?.trim();
+    errores.comuna = !direccionEditando.comuna?.trim();
+    errores.calle = !direccionEditando.calle?.trim();
+    errores.numeroCalle = !direccionEditando.numeroCalle?.trim();
+    errores.complemento = !direccionEditando.complemento?.trim();
+
+    return Object.values(errores).every((e) => e === false);
+  }
 
   async function guardarEdicion() {
+    if (!validarCampos(direccionEditando)) {
+      alert("Debe completar todos los campos antes de continuar.");
+      return;
+    }
     const url = esNueva
       ? `http://localhost:5029/api/Direcciones/usuario/${idUsuario}`
       : `http://localhost:5029/api/Direcciones/${direccionEditando.idDireccion}`;
@@ -56,9 +81,9 @@
       method,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(direccionEditando)
+      body: JSON.stringify(direccionEditando),
     });
     mostrarModal = false;
     cargarDirecciones();
@@ -68,7 +93,7 @@
     if (!confirm("¿Eliminar esta dirección?")) return;
     await fetch(`http://localhost:5029/api/Direcciones/${id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
     cargarDirecciones();
   }
@@ -76,16 +101,17 @@
   async function marcarPrincipal(id) {
     await fetch(`http://localhost:5029/api/Direcciones/${id}/principal`, {
       method: "PUT",
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
     cargarDirecciones();
   }
 
   onMount(cargarDirecciones);
 
-  $: direccionesFiltradas = direcciones.filter(d =>
-    [d.etiqueta, d.region, d.comuna, d.calle]
-      .some(v => v?.toLowerCase().includes(filtro.toLowerCase()))
+  $: direccionesFiltradas = direcciones.filter((d) =>
+    [d.etiqueta, d.region, d.comuna, d.calle].some((v) =>
+      v?.toLowerCase().includes(filtro.toLowerCase()),
+    ),
   );
 </script>
 
@@ -99,7 +125,12 @@
 
   <div class="filtros-card">
     <h4 class="filtros-titulo">Buscar Dirección</h4>
-    <input type="text" class="form-control" placeholder="🔍 Buscar por comuna o región" bind:value={filtro} />
+    <input
+      type="text"
+      class="form-control"
+      placeholder="🔍 Buscar por comuna o región"
+      bind:value={filtro}
+    />
   </div>
 
   {#if cargando}
@@ -132,12 +163,23 @@
                 {#if d.esPrincipal}
                   <span class="badge badge-tipo-ADMINISTRADOR">Principal</span>
                 {:else}
-                  <button class="btn btn-warning" on:click={() => marcarPrincipal(d.idDireccion)}>Marcar</button>
+                  <button
+                    class="btn btn-warning"
+                    on:click={() => marcarPrincipal(d.idDireccion)}
+                    >Marcar</button
+                  >
                 {/if}
               </td>
               <td>
-                <button class="btn-accion btn-warning" on:click={() => abrirModal(d)}>Editar</button>
-                <button class="btn-accion btn-danger" on:click={() => eliminarDireccion(d.idDireccion)}>Eliminar</button>
+                <button
+                  class="btn-accion btn-warning"
+                  on:click={() => abrirModal(d)}>Editar</button
+                >
+                <button
+                  class="btn-accion btn-danger"
+                  on:click={() => eliminarDireccion(d.idDireccion)}
+                  >Eliminar</button
+                >
               </td>
             </tr>
           {/each}
@@ -153,35 +195,71 @@
         <div class="grid-2-cols">
           <div>
             <label>Etiqueta</label>
-            <input bind:value={direccionEditando.etiqueta} placeholder="Casa, Trabajo, Sucursal 1, etc." />
+            <input
+              bind:value={direccionEditando.etiqueta}
+              placeholder="Casa, Trabajo, Sucursal 1, etc."
+              required
+            />
+
           </div>
           <div>
             <label>Región</label>
-            <input bind:value={direccionEditando.region} placeholder="Región Metropolitana, Región del Maule, Región del Bio Bio, etc." />
+            <input
+              bind:value={direccionEditando.region}
+              placeholder="Región Metropolitana, Región del Maule, Región del Bio Bio, etc."
+              required
+            />
           </div>
           <div>
             <label>Comuna</label>
-            <input bind:value={direccionEditando.comuna} placeholder="Concepción, San Pedro de la Paz, Lota, Coronel, etc."/>
+            <input
+              bind:value={direccionEditando.comuna}
+              placeholder="Concepción, San Pedro de la Paz, Lota, Coronel, etc."
+              required
+            />
           </div>
           <div>
             <label>Calle</label>
-            <input bind:value={direccionEditando.calle} placeholder="Avenida las Condes " />
+            <input
+              bind:value={direccionEditando.calle}
+              placeholder="Avenida las Condes "
+              required
+            />
           </div>
           <div>
             <label>Número</label>
-            <input bind:value={direccionEditando.numeroCalle}  placeholder="Número de calle, Avenida las Condes 85"/>
+            <input
+              bind:value={direccionEditando.numeroCalle}
+              placeholder="Número de calle, Avenida las Condes 85"
+              required
+            />
           </div>
           <div>
             <label>Complemento</label>
-            <input bind:value={direccionEditando.complemento} placeholder=" Casa con reja de madera, Sala 2B piso 1, etc." />
+            <input
+              bind:value={direccionEditando.complemento}
+              placeholder=" Casa con reja de madera, Sala 2B piso 1, etc."
+              required
+            />
           </div>
           <div class="form-check">
-            <label for="esPrincipal" class="form-check-label" style="color: black;">Marcar como principal</label>
-            <input type="checkbox" id="esPrincipal"  bind:checked={direccionEditando.esPrincipal} class="form-check-input" />
+            <label
+              for="esPrincipal"
+              class="form-check-label"
+              style="color: black;">Marcar como principal</label
+            >
+            <input
+              type="checkbox"
+              id="esPrincipal"
+              bind:checked={direccionEditando.esPrincipal}
+              class="form-check-input"
+            />
           </div>
         </div>
         <div class="modal-actions mt-3">
-          <button class="btn btn-cancel" on:click={() => (mostrarModal = false)}>Cancelar</button>
+          <button class="btn btn-cancel" on:click={() => (mostrarModal = false)}
+            >Cancelar</button
+          >
           <button class="btn btn-primary-confirm" on:click={guardarEdicion}>
             {esNueva ? "Agregar" : "Guardar"}
           </button>
