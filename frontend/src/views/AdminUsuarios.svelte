@@ -69,10 +69,9 @@
         }
     }
 
-    // Resetear la página a 1 cuando los filtros cambian (para evitar páginas vacías)
+
     $: usuariosFiltrados, (currentPage = 1);
 
-    // Lógica de Filtro COMBINADA
     $: usuariosFiltrados = usuarios.filter((u) => {
         // filtrar por nombre
         const cumpleNombre = u.nombreUsuario
@@ -90,32 +89,26 @@
         return cumpleNombre && cumpleTipo && cumpleEstado;
     });
 
-    // Abre el modal y rellena el formulario con los datos del usuario
     function abrirModalEdicion(usuario) {
-        // Clonar el objeto para no modificar los datos originales antes de Guardar
         usuarioAEditar = { ...usuario };
-        nuevaContrasena = ""; // IMPORTANTE: Limpiar la contraseña al abrir
+        nuevaContrasena = ""; 
         mostrarModal = true;
-        mensajeModal = { tipo: "", texto: "" }; // Limpiar mensajes
+        mensajeModal = { tipo: "", texto: "" }; 
     }
 
-    // Envía la solicitud PUT para actualizar el usuario
+
     async function guardarEdicion() {
         try {
             mensajeModal = { tipo: "cargando", texto: "Guardando cambios..." };
 
-            // Clonar el objeto a enviar para modificarlo temporalmente
             const datosAEnviar = { ...usuarioAEditar };
 
-            // Lógica de Contraseña: Solo agregarla si se ingresó un valor
             if (nuevaContrasena.trim() !== "") {
-                // Aquí se envía la nueva contraseña para que el backend la hashee
                 datosAEnviar.password = nuevaContrasena.trim();
             } else {
                 delete datosAEnviar.password;
             }
 
-            // Asegurarse de que la fecha de actualización sea la actual
             datosAEnviar.fechaActualizacion = new Date().toISOString();
 
             const res = await fetch(
@@ -312,8 +305,8 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 {#if mostrarModal}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="modal-overlay" on:click|self={() => (mostrarModal = false)}>
-        <div class="modal modal-default">
+    <div class="modal-overlay">
+        <div class="modal modal-default" style="max-width: 992px">
             <div class="modal-header">
                 <h3 class="modal-title">
                     Editar Usuario: {usuarioAEditar.nombreUsuario}

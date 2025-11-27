@@ -367,13 +367,7 @@
         </div>
 
         <button
-            on:click={iniciarCompra}
-            class="btn btn-checkout"
-            disabled={isProcessing ||
-                $totalItems === 0 ||
-                isLoadingAddresses ||
-                addressFetchError}
-        >
+            on:click={iniciarCompra} class="btn btn-checkout" disabled={isProcessing || $totalItems === 0 || isLoadingAddresses || addressFetchError}>
             {#if isLoadingAddresses}
                 Cargando Direcciones...
             {:else if isProcessing}

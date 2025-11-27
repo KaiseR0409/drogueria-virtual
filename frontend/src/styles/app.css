@@ -2097,6 +2097,13 @@ button:disabled,
   display: none;
 }
 
+.home-grid .btn {
+  color: white !important;
+}
+.home-grid .btn-cancel{
+  color: black !important;
+}
+
 @media (max-width: 972px) {
   .carrito-container {
     display: none;
