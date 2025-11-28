@@ -14,7 +14,7 @@
     comuna: false,
     calle: false,
     numeroCalle: false,
-    complemento: false
+    complemento: false,
   };
 
   const idUsuario = localStorage.getItem("idUsuario");
@@ -32,8 +32,14 @@
           },
         },
       );
-      if (!res.ok) throw new Error("Error al obtener direcciones");
-      direcciones = await res.json();
+      if (!res.ok){
+        if(res.status === 404){
+          direcciones = [];
+          return;
+        }
+        throw new Error("Error al obtener direcciones: " + res.status);
+      } 
+        direcciones = await res.json();
     } catch (err) {
       error = err.message;
     } finally {
@@ -137,7 +143,7 @@
     <p class="loading-state">Cargando direcciones...</p>
   {:else if error}
     <p class="error-message">{error}</p>
-  {:else if direccionesFiltradas.length === 0}
+  {:else if direccionesFiltradas.length === 0 || direcciones.length < 1}
     <p class="empty-state">No hay direcciones registradas.</p>
   {:else}
     <div class="tabla-wrapper">
@@ -200,7 +206,6 @@
               placeholder="Casa, Trabajo, Sucursal 1, etc."
               required
             />
-
           </div>
           <div>
             <label>Región</label>
@@ -242,19 +247,22 @@
               required
             />
           </div>
-          <div class="form-check">
-            <label
-              for="esPrincipal"
-              class="form-check-label"
-              style="color: black;">Marcar como principal</label
-            >
-            <input
-              type="checkbox"
-              id="esPrincipal"
-              bind:checked={direccionEditando.esPrincipal}
-              class="form-check-input"
-            />
-          </div>
+          {#if esNueva}
+            <div class="form-check">
+              <label
+                for="esPrincipal"
+                class="form-check-label"
+                style="color: black;">Marcar como principal</label
+              >
+
+              <input
+                type="checkbox"
+                id="esPrincipal"
+                bind:checked={direccionEditando.esPrincipal}
+                class="form-check-input"
+              />
+            </div>
+          {/if}
         </div>
         <div class="modal-actions mt-3">
           <button class="btn btn-cancel" on:click={() => (mostrarModal = false)}

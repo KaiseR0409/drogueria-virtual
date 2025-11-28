@@ -4,12 +4,24 @@
     import ComprobanteCliente from "../components/ComprobanteCliente.svelte";
     import { cart, subtotal, totalItems } from "../logic/stores.js";
 
+    // Cálculo real del subtotal
+    $: subtotalCL = $cart.reduce(
+        (sum, item) => sum + Number(getItemPrice(item)),
+        0,
+    );
+
+    // IVA 19% solo FRONTEND (no se envía al backend)
+    $: ivaEstimado = subtotalCL * 0.19;
+
+    // Total final de pago
+    $: totalConIVA = subtotalCL + ivaEstimado;
+
     let ordenesConfirmadas = [];
     let mostrarComprobante = false;
     let isProcessing = false;
 
     let mostrarModalDireccion = false;
-    let selectedAddressKey = ""; 
+    let selectedAddressKey = "";
 
     let userAddresses = [];
     let isLoadingAddresses = true;
@@ -18,7 +30,6 @@
     // token e idUsuario desde localStorage
     const token = localStorage.getItem("token");
     const idUsuario = localStorage.getItem("idUsuario");
-
 
     // Función auxiliar para obtener el nombre del proveedor
     function getProveedorName(item) {
@@ -32,7 +43,7 @@
     function getItemPrice(item) {
         const price = item.price ?? item.precioUnitario ?? 0;
         const quantity = item.quantity ?? item.cantidad ?? 1;
-        return (price * quantity).toFixed(2);
+        return Number((price * quantity).toFixed(2));
     }
 
     onMount(async () => {
@@ -151,7 +162,7 @@
     async function finalizarCompra() {
         if (isProcessing) return;
 
-        const principal = userAddresses[0]; 
+        const principal = userAddresses[0];
         if (!principal || !principal.idDireccion) {
             alert(
                 "No se encontró una dirección principal válida. Revise sus direcciones.",
@@ -206,7 +217,7 @@
                 impuestos: 0,
                 descuento: 0,
                 items,
-                idDireccion: principal.idDireccion, 
+                idDireccion: principal.idDireccion,
             };
 
             try {
@@ -351,17 +362,23 @@
             {/each}
         </div>
 
-        <div class="cart-summary">
-            <div class="summary-line">
-                <span class="summary-label">Subtotal:</span>
-                <span class="summary-value">${$subtotal.toFixed(2)}</span>
-            </div>
-            <div class="summary-line total-line">
-                <span class="summary-label">Total a Pagar:</span>
-                <span class="summary-value total-value"
-                    >${$subtotal.toFixed(2)}</span
-                >
-            </div>
+        <div class="summary-line">
+            <span class="summary-label">Subtotal:</span>
+            <span class="summary-value">${subtotalCL.toFixed(0)}</span>
+        </div>
+
+        <div class="summary-line">
+            <span class="summary-label">IVA (19% estimado):</span>
+            <span class="summary-value">${ivaEstimado.toFixed(0)}</span>
+        </div>
+
+        <hr class="cart-divider" />
+
+        <div class="summary-line total-line">
+            <span class="summary-label">Total a Pagar:</span>
+            <span class="summary-value total-value"
+                >${totalConIVA.toFixed(0)}</span
+            >
         </div>
 
         <button
@@ -371,14 +388,15 @@
                 $totalItems === 0 ||
                 isLoadingAddresses ||
                 addressFetchError}
-                style="color: black;"
+            style="color: black;"
         >
             {#if isLoadingAddresses}
                 Cargando Direcciones...
             {:else if isProcessing}
                 Procesando Compra...
             {:else if addressFetchError}
-                Error con Direcciones, verifique que exista direccion activa o contacte a un administrador
+                Error con Direcciones, verifique que exista direccion activa o
+                contacte a un administrador
             {:else}
                 Pagar y Finalizar Compra
             {/if}
@@ -412,7 +430,8 @@
                         <p>Cargando dirección principal...</p>
                     {:else if addressFetchError}
                         <p class="text-danger">
-                            Error al cargar direcciones, por favor agregue una dirección o inicie sesión.
+                            Error al cargar direcciones, por favor agregue una
+                            dirección o inicie sesión.
                         </p>
                     {:else if userAddresses.length === 0}
                         <p>No tiene ninguna dirección principal configurada.</p>

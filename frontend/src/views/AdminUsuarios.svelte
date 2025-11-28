@@ -1,14 +1,13 @@
 <script>
     import { onMount } from "svelte";
-    import { checkAuth } from '../logic/auth.js';
-    checkAuth({ rolRequerido: 'Administrador' });
+    import { checkAuth } from "../logic/auth.js";
+    checkAuth({ rolRequerido: "Administrador" });
 
     let usuarios = [];
 
     // Variables de estado del Modal de Edición
     let mostrarModal = false;
     let usuarioAEditar = {}; // Objeto que contendrá los datos del usuario seleccionado
-
 
     let nuevaContrasena = "";
 
@@ -30,7 +29,14 @@
             cargando = true;
             const res = await fetch("http://localhost:5029/api/Usuario");
             if (!res.ok) throw new Error("Error al obtener usuarios");
-            usuarios = await res.json();
+
+            let lista = await res.json();
+
+            for (const u of lista) {
+                u.direcciones = await obtenerDirecciones(u.idUsuario);
+            }
+
+            usuarios = lista;
         } catch (e) {
             error = e.message;
         } finally {
@@ -69,7 +75,6 @@
         }
     }
 
-
     $: usuariosFiltrados, (currentPage = 1);
 
     $: usuariosFiltrados = usuarios.filter((u) => {
@@ -89,15 +94,51 @@
         return cumpleNombre && cumpleTipo && cumpleEstado;
     });
 
-    function abrirModalEdicion(usuario) {
-        usuarioAEditar = { ...usuario };
-        nuevaContrasena = ""; 
-        mostrarModal = true;
-        mensajeModal = { tipo: "", texto: "" }; 
+    function validarFormulario() {
+        if (
+            !usuarioAEditar.nombreUsuario ||
+            usuarioAEditar.nombreUsuario.trim() === ""
+        )
+            return "El nombre no puede estar vacío.";
+
+        if (!usuarioAEditar.usuario || usuarioAEditar.usuario.trim() === "")
+            return "El usuario de inicio de sesión no puede estar vacío.";
+
+        if (!usuarioAEditar.telefono || usuarioAEditar.telefono.trim() === "")
+            return "El teléfono no puede estar vacío.";
+
+        if (usuarioAEditar.telefono.length !== 12)
+            return "El teléfono debe tener 12 caracteres (+569XXXXXXXX).";
+
+        if (!usuarioAEditar.estadoUsuario)
+            return "Debes seleccionar un estado.";
+
+        if (
+            !usuarioAEditar.tipoEstablecimiento ||
+            usuarioAEditar.tipoEstablecimiento.trim() === ""
+        )
+            return "Debes ingresar un tipo de establecimiento.";
+
+        // contraseña solo validar si se está cambiando
+        if (nuevaContrasena.trim() !== "" && nuevaContrasena.length < 6)
+            return "La contraseña debe tener al menos 6 caracteres.";
+
+        return "";
     }
 
+    function abrirModalEdicion(usuario) {
+        usuarioAEditar = { ...usuario };
+        nuevaContrasena = "";
+        mostrarModal = true;
+        mensajeModal = { tipo: "", texto: "" };
+    }
 
     async function guardarEdicion() {
+        const errorValidacion = validarFormulario();
+        if (errorValidacion) {
+            mensajeModal = { tipo: "error", texto: errorValidacion };
+            return;
+        }
         try {
             mensajeModal = { tipo: "cargando", texto: "Guardando cambios..." };
 
@@ -129,12 +170,10 @@
                 texto: " ¡Usuario actualizado correctamente!",
             };
             // Recargar la lista principal para reflejar los cambios
-            await cargarUsuarios();
-
-            // Cerrar el modal después de un breve tiempo
             setTimeout(() => {
                 mostrarModal = false;
-            }, 1500);
+            }, 500);
+            await cargarUsuarios();
         } catch (e) {
             console.error("Error en la solicitud PUT:", e);
             mensajeModal = {
@@ -151,7 +190,7 @@
         if (id === -1) id = 0;
         usuario.estadoUsuario = estados[(id + 1) % estados.length];
 
-        // Lógica de PUT simplificada para el estado
+        usuarios = [...usuarios];
         try {
             await fetch(
                 `http://localhost:5029/api/Usuario/${usuario.idUsuario}`,
@@ -161,14 +200,24 @@
                     body: JSON.stringify(usuario),
                 },
             );
-            await cargarUsuarios();
         } catch (e) {
             console.error("Error al cambiar estado:", e);
             error = "No se pudo actualizar el estado del usuario.";
         }
     }
 
-    
+    async function obtenerDirecciones(idUsuario) {
+        try {
+            const res = await fetch(
+                `http://localhost:5029/api/Direcciones/usuario/${idUsuario}`,
+            );
+            if (!res.ok) throw new Error("Error al obtener direcciones");
+            return await res.json();
+        } catch (err) {
+            console.error(err);
+            return [];
+        }
+    }
 
     onMount(() => {
         cargarUsuarios();
@@ -178,8 +227,8 @@
 <div class="dashboard-container">
     <div class="header">
         <h2>Administración de Usuarios</h2>
-        <a href="#/agregar-usuario" class="btn btn-principal"
-            > Agregar Usuario</a
+        <a href="#/agregar-usuario" class="btn btn-principal">
+            Agregar Usuario</a
         >
     </div>
 
@@ -211,7 +260,7 @@
     {#if cargando}
         <p class="loading-state">Cargando usuarios...</p>
     {:else if error}
-        <p class="error-message"> {error}</p>
+        <p class="error-message">{error}</p>
     {:else if usuariosFiltrados.length === 0}
         <p class="empty-state">
             No se encontraron usuarios que coincidan con los filtros.
@@ -245,15 +294,20 @@
                             <td>{formatearFecha(u.fechaCreacion)}</td>
                             <td>{formatearFecha(u.fechaActualizacion)}</td>
                             <td>{u.tipoEstablecimiento}</td>
-                            <td class="direccion-celda">
-                                {u.direccion1 || "Sin Dirección"}
-                                {#if u.direccion2}
-                                    / {u.direccion2}{/if}
-                                {#if u.direccion3}
-                                    / {u.direccion3}{/if}
+                            <td>
+                                {#if u.direcciones.length > 0}
+                                    {#each u.direcciones as d}
+                                        {#if d.esPrincipal}
+                                            {d.calle} {d.numero}, {d.comuna}
+                                        {/if}
+                                    {/each}
+                                {:else}
+                                    Sin Dirección
+                                {/if}
                             </td>
                             <td>
                                 <button
+                                    type="button"
                                     class="btn-estado btn-estado-{u.estadoUsuario}"
                                     on:click={() => cambiarEstado(u)}
                                 >
@@ -267,7 +321,6 @@
                                 >
                                     Editar
                                 </button>
-                               
                             </td>
                         </tr>
                     {/each}
@@ -342,6 +395,21 @@
                     </div>
 
                     <div class="form-group mb-3">
+                        <label for="usuarioLogin"
+                            >Usuario de inicio de sesión</label
+                        >
+                        <input
+                            id="usuarioLogin"
+                            type="text"
+                            class="form-control"
+                            bind:value={usuarioAEditar.usuario}
+                            required
+                            style="border: 1px solid gray;"
+                            placeholder="Ej: jprieto89"
+                        />
+                    </div>
+
+                    <div class="form-group mb-3">
                         <label for="nuevaContrasena"
                             >Nueva Contraseña (Dejar vacío para no cambiar)</label
                         >
@@ -353,20 +421,6 @@
                             placeholder="Ingrese nueva contraseña aquí"
                             style="border: 1px solid gray;"
                         />
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="tipoUsuario">Tipo de Usuario</label>
-                        <select
-                            id="tipoUsuario"
-                            class="form-control"
-                            bind:value={usuarioAEditar.tipoUsuario}
-                            required
-                            style="border: 1px solid gray;"
-                        >
-                            {#each tiposUsuario.filter((t) => t !== "Todos") as tipo}
-                                <option value={tipo}>{tipo}</option>
-                            {/each}
-                        </select>
                     </div>
 
                     <div class="form-group mb-3">
@@ -407,8 +461,6 @@
                             bind:value={usuarioAEditar.tipoEstablecimiento}
                         />
                     </div>
-
-                    
 
                     {#if mensajeModal.texto}
                         <p class="alert alert-{mensajeModal.tipo} alert-modal">

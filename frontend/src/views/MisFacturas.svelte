@@ -1,20 +1,30 @@
 <script>
     import { onMount } from "svelte";
     import FacturaPreview from "../components/FacturaPreview.svelte";
-    import { checkAuth } from '../logic/auth.js';
+    import { checkAuth } from "../logic/auth.js";
 
-    checkAuth({ rolRequerido: 'Proveedor' });
+    checkAuth({ rolRequerido: "Proveedor" });
 
     let facturas = [];
     let idProveedor = localStorage.getItem("idProveedor");
 
+    function formatearCLP(valor) {
+        if (valor == null) return "$0";
+        return Number(valor).toLocaleString("es-CL", {
+            style: "currency",
+            currency: "CLP",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        });
+    }
+
     // Variables de Filtro
-    let filtroEstado = "Todos"; 
+    let filtroEstado = "Todos";
     let filtroFactura = "";
     let filtroOrden = "";
     let filtroFecha = "";
     let filtroMonto = "";
-    let filtroIDUsuario = ""; 
+    let filtroIDUsuario = "";
 
     let cargando = true;
     let error = null;
@@ -25,17 +35,17 @@
     // Lógica de Paginación
     const itemsPerPage = 8; // Define cuántas filas por página
     let currentPage = 1;
-    
+
     // Función para cambiar de página
     function goToPage(page) {
         if (page >= 1 && page <= totalPages) {
             currentPage = page;
         }
     }
-    
+
     // Resetear la página a 1 cuando los filtros cambian (para evitar páginas vacías)
     $: facturasFiltradas, (currentPage = 1);
-    
+
     // Calcular el número total de páginas reactivamente
     $: totalPages = Math.ceil(facturasFiltradas.length / itemsPerPage);
 
@@ -46,7 +56,6 @@
     // Obtener las facturas de la página actual
     $: facturasPaginadas = facturasFiltradas.slice(startIndex, endIndex);
 
-
     async function cargarFacturas() {
         if (!idProveedor) return;
 
@@ -54,14 +63,16 @@
             cargando = true;
             error = null;
             // Endpoint de la API
-            const res = await fetch(`http://localhost:5029/api/Orden/mis-facturas/${idProveedor}`);
-            
+            const res = await fetch(
+                `http://localhost:5029/api/Orden/mis-facturas/${idProveedor}`,
+            );
+
             if (!res.ok) {
                 console.error("Error al cargar facturas:", res.status);
                 error = `Error ${res.status} al cargar las facturas.`;
                 return;
             }
-            
+
             facturas = await res.json();
         } catch (err) {
             console.error("Error en fetch:", err);
@@ -84,11 +95,12 @@
 
     // Lógica de Filtro combinada y ordenamiento
     $: facturasFiltradas = facturas
-        .filter(f => {
+        .filter((f) => {
             const fechaFmt = formatearFecha(f.fechaOrden);
 
             // Filtrar por Estado
-            const cumpleEstado = filtroEstado === "Todos" || f.estadoOrden === filtroEstado;
+            const cumpleEstado =
+                filtroEstado === "Todos" || f.estadoOrden === filtroEstado;
 
             // Filtrar por Número de Factura
             const cumpleFactura = f.numeroFactura
@@ -104,7 +116,7 @@
             const cumpleIDUsuario = f.idUsuario
                 ?.toString()
                 .includes(filtroIDUsuario.toLowerCase());
-            
+
             // Filtrar por Fecha
             const cumpleFecha = fechaFmt.includes(filtroFecha);
 
@@ -128,6 +140,7 @@
         cargarFacturas();
     });
 </script>
+
 <div class="dashboard-container">
     <div class="header">
         <h2>🧾 Mis Facturas (Proveedor: {idProveedor})</h2>
@@ -154,7 +167,7 @@
                 bind:value={filtroIDUsuario}
                 class="form-control control-filtro"
             />
-            
+
             <input
                 type="text"
                 placeholder="🔍 Fecha (YYYY-MM-DD)"
@@ -167,7 +180,10 @@
                 bind:value={filtroMonto}
                 class="form-control control-filtro"
             />
-            <select bind:value={filtroEstado} class="form-control control-filtro">
+            <select
+                bind:value={filtroEstado}
+                class="form-control control-filtro"
+            >
                 {#each estadosFactura as estado}
                     <option value={estado}>{estado}</option>
                 {/each}
@@ -185,7 +201,7 @@
         </p>
     {:else}
         <div class="tabla-wrapper">
-            <table class="tabla-usuarios"> 
+            <table class="tabla-usuarios">
                 <thead>
                     <tr>
                         <th class="col-factura">FACTURA</th>
@@ -198,15 +214,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {#each facturasPaginadas as f (f.idOrden)} 
+                    {#each facturasPaginadas as f (f.idOrden)}
                         <tr>
                             <td class="factura-celda">{f.numeroFactura}</td>
                             <td>{f.idOrden}</td>
                             <td>ID {f.idUsuario}</td>
                             <td>{formatearFecha(f.fechaOrden)}</td>
-                            <td class="monto-celda">${f.montoTotal.toFixed(2)}</td> 
+                            <td class="monto-celda"
+                                >{formatearCLP(f.montoTotal)}</td
+                            >
                             <td>
-                                <span class="badge badge-estado-{f.estadoOrden.toLowerCase()}">
+                                <span
+                                    class="badge badge-estado-{f.estadoOrden.toLowerCase()}"
+                                >
                                     {f.estadoOrden}
                                 </span>
                             </td>

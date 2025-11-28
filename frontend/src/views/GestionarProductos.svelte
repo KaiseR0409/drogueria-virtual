@@ -1,10 +1,10 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import * as XLSX from 'xlsx';
+    import * as XLSX from "xlsx";
     import ProductModal from "../components/ProductModal.svelte";
-    import { checkAuth } from '../logic/auth.js';
+    import { checkAuth } from "../logic/auth.js";
 
-    checkAuth({ rolRequerido: 'Proveedor' });
+    checkAuth({ rolRequerido: "Proveedor" });
 
     // --- Variables de Estado ---
     let productos: any[] = [];
@@ -13,7 +13,7 @@
 
     // --- Variables de Carga Masiva ---
     let archivoSeleccionado: File;
-    let mensajeCargaMasiva = '';
+    let mensajeCargaMasiva = "";
 
     // --- Estado del modal y producto seleccionado ---
     let isModalOpen = false;
@@ -26,23 +26,33 @@
     let filtroStock = "";
     const itemsPerPage = 8;
     let currentPage = 1;
-    let idProveedor; 
+    let idProveedor;
 
     // --- FUNCIONES ---
 
+    function formatearCLP(valor) {
+        if (!valor && valor !== 0) return "$0";
+        return valor.toLocaleString("es-CL", {
+            style: "currency",
+            currency: "CLP",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        });
+    }
 
     // Función principal para obtener datos
     function fetchProductos() {
         loading = true;
         fetchError = null;
-        
+
         idProveedor = localStorage.getItem("idUsuario");
         if (!idProveedor) {
-            fetchError = "No se encontró al proveedor. Por favor, inicie sesión.";
+            fetchError =
+                "No se encontró al proveedor. Por favor, inicie sesión.";
             loading = false;
             return;
         }
-        
+
         // Llamada a la API
         fetch(`http://localhost:5029/api/proveedor/${idProveedor}/productos`)
             .then((res) => {
@@ -62,32 +72,34 @@
 
     // --- Funciones de Carga Masiva ---
     function descargarPlantillaJSON() {
-        const plantilla = [{
-            "nombreProducto": "Ejemplo: Paracetamol 500mg",
-            "principioActivo": "Paracetamol",
-            "concentracion": "500mg",
-            "formaFarmaceutica": "Comprimido",
-            "presentacionComercial": "Caja x 20 comprimidos",
-            "laboratorioFabricante": "Laboratorio Ejemplo S.A.",
-            "registroSanitario": "INVIMA-12345",
-            "fechaVencimiento": "2026-12-31T00:00:00",
-            "condicionesAlmacenamiento": "Lugar fresco y seco, menor a 30°C",
-            "imagenUrl": "https://ejemplo.com/imagen.png",
-            "marca": "MarcaGenérica",
-            "codigoBarras": "770123456789",
-            "familia": "Analgésicos",
-            "clase": "Antipirético",
-            "viaAdministracion": "Oral",
-            "registroISP": 1,
-            "precio": 5.99,
-            "stock": 150
-        }];
+        const plantilla = [
+            {
+                nombreProducto: "Ejemplo: Paracetamol 500mg",
+                principioActivo: "Paracetamol",
+                concentracion: "500mg",
+                formaFarmaceutica: "Comprimido",
+                presentacionComercial: "Caja x 20 comprimidos",
+                laboratorioFabricante: "Laboratorio Ejemplo S.A.",
+                registroSanitario: "INVIMA-12345",
+                fechaVencimiento: "26/07/2027",
+                condicionesAlmacenamiento: "Lugar fresco y seco, menor a 30°C",
+                imagenUrl: "https://ejemplo.com/imagen.png",
+                marca: "MarcaGenérica",
+                codigoBarras: "770123456789",
+                familia: "Analgésicos",
+                clase: "Antipirético",
+                viaAdministracion: "Oral",
+                registroISP: 1,
+                precio: 500000,
+                stock: 390,
+            },
+        ];
         const jsonString = JSON.stringify(plantilla, null, 4);
-        const blob = new Blob([jsonString], { type: 'application/json' });
+        const blob = new Blob([jsonString], { type: "application/json" });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = 'plantilla_productos.json';
+        a.download = "plantilla_productos.json";
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -97,24 +109,39 @@
             alert("Por favor, selecciona un archivo.");
             return;
         }
-        mensajeCargaMasiva = 'Procesando archivo...';
+        mensajeCargaMasiva = "Procesando archivo...";
 
         const procesarYEnviar = async (productosJSON: any[]) => {
             try {
-                if (!Array.isArray(productosJSON) || productosJSON.length === 0) {
-                    throw new Error("El archivo no contiene una lista de productos válida.");
+                if (
+                    !Array.isArray(productosJSON) ||
+                    productosJSON.length === 0
+                ) {
+                    throw new Error(
+                        "El archivo no contiene una lista de productos válida.",
+                    );
                 }
-                const idProveedor = localStorage.getItem('idProveedor');
-                const token = localStorage.getItem('token');
-                if (!idProveedor || !token) throw new Error("Sesión de proveedor no válida.");
+                const idProveedor = localStorage.getItem("idProveedor");
+                const token = localStorage.getItem("token");
+                if (!idProveedor || !token)
+                    throw new Error("Sesión de proveedor no válida.");
 
-                const response = await fetch(`http://localhost:5029/api/proveedor/${idProveedor}/carga-masiva`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(productosJSON)
-                });
+                const response = await fetch(
+                    `http://localhost:5029/api/proveedor/${idProveedor}/carga-masiva`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(productosJSON),
+                    },
+                );
                 const resultado = await response.json();
-                if (!response.ok) throw new Error(resultado.mensaje || "Error en el servidor.");
+                if (!response.ok)
+                    throw new Error(
+                        resultado.mensaje || "Error en el servidor.",
+                    );
                 mensajeCargaMasiva = resultado.mensaje;
                 fetchProductos();
             } catch (err) {
@@ -123,31 +150,38 @@
         };
 
         const reader = new FileReader();
-        if (archivoSeleccionado.name.endsWith('.json')) {
-            reader.onload = (event) => procesarYEnviar(JSON.parse(event.target.result as string));
+        if (archivoSeleccionado.name.endsWith(".json")) {
+            reader.onload = (event) =>
+                procesarYEnviar(JSON.parse(event.target.result as string));
             reader.readAsText(archivoSeleccionado);
-        } else if (archivoSeleccionado.name.endsWith('.xlsx') || archivoSeleccionado.name.endsWith('.xls')) {
+        } else if (
+            archivoSeleccionado.name.endsWith(".xlsx") ||
+            archivoSeleccionado.name.endsWith(".xls")
+        ) {
             reader.onload = (event) => {
                 try {
-                    const data = new Uint8Array(event.target.result as ArrayBuffer);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    const data = new Uint8Array(
+                        event.target.result as ArrayBuffer,
+                    );
+                    const workbook = XLSX.read(data, { type: "array" });
                     const sheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[sheetName];
                     const productosJSON = XLSX.utils.sheet_to_json(worksheet, {
                         raw: false,
-                        dateNF: 'yyyy-mm-dd'
+                        dateNF: "yyyy-mm-dd",
                     });
                     procesarYEnviar(productosJSON);
                 } catch (err) {
-                     mensajeCargaMasiva = `Error al leer el archivo Excel: ${(err as Error).message}`;
+                    mensajeCargaMasiva = `Error al leer el archivo Excel: ${(err as Error).message}`;
                 }
             };
             reader.readAsArrayBuffer(archivoSeleccionado);
         } else {
-            mensajeCargaMasiva = "Error: Formato de archivo no soportado. Sube un .json o .xlsx.";
+            mensajeCargaMasiva =
+                "Error: Formato de archivo no soportado. Sube un .json o .xlsx.";
         }
     }
-    
+
     // --- Manejadores del Modal y otras funciones de acción ---
     function openModal(product = null) {
         selectedProduct = product;
@@ -160,10 +194,10 @@
         };
         window.addEventListener("popstate", _popstateHandler);
     }
-    
+
     function handleClose(shouldGoBack = true) {
         isModalOpen = false;
-        fetchProductos(); 
+        fetchProductos();
         if (_popstateHandler && shouldGoBack) {
             window.removeEventListener("popstate", _popstateHandler);
             _popstateHandler = null;
@@ -174,7 +208,7 @@
     function handleEdit(inv: any) {
         openModal(inv);
     }
-    
+
     async function handleDelete(idProducto: number) {
         if (confirm("¿Está seguro de eliminar este producto?")) {
             const idProveedor = localStorage.getItem("idProveedor");
@@ -182,9 +216,9 @@
             try {
                 const res = await fetch(
                     `http://localhost:5029/api/proveedor/${idProveedor}/inventario/${idProducto}`,
-                    { 
+                    {
                         method: "DELETE",
-                        headers: { 'Authorization': `Bearer ${token}` }
+                        headers: { Authorization: `Bearer ${token}` },
                     },
                 );
                 if (!res.ok) throw new Error("Error al eliminar el producto");
@@ -198,26 +232,30 @@
             }
         }
     }
-    
+
     function goToPage(page: number) {
         if (page >= 1 && page <= totalPages) {
             currentPage = page;
         }
     }
-    
+
     // --- Lógica de Filtro y Paginación Reactiva ---
     $: productosFiltrados = productos
-        .filter(p => {
-            const nombre = p.producto?.nombreProducto?.toLowerCase() || '';
-            const id = p.producto?.idProducto?.toString() || '';
-            const stock = p.stock?.toString() || '';
+        .filter((p) => {
+            const nombre = p.producto?.nombreProducto?.toLowerCase() || "";
+            const id = p.producto?.idProducto?.toString() || "";
+            const stock = p.stock?.toString() || "";
             const cumpleNombre = nombre.includes(filtroNombre.toLowerCase());
             const cumpleID = id.includes(filtroID);
             const cumpleStock = stock.includes(filtroStock);
             return cumpleNombre && cumpleID && cumpleStock;
         })
-        .sort((a, b) => (a.producto.nombreProducto || '').localeCompare(b.producto.nombreProducto || ''));
-    
+        .sort((a, b) =>
+            (a.producto.nombreProducto || "").localeCompare(
+                b.producto.nombreProducto || "",
+            ),
+        );
+
     $: totalPages = Math.ceil(productosFiltrados.length / itemsPerPage);
     $: startIndex = (currentPage - 1) * itemsPerPage;
     $: endIndex = startIndex + itemsPerPage;
@@ -239,17 +277,24 @@
 
 {#if isModalOpen}
     <div class="modal-overlay">
-        <div class="modal" role="dialog" aria-modal="true" aria-label="Formulario de producto">
+        <div
+            class="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Formulario de producto"
+        >
             <div class="modal-header">
                 <h3 class="modal-title">
-                    {selectedProduct ? "Editar Producto" : "Publicar Nuevo Producto"}
+                    {selectedProduct
+                        ? "Editar Producto"
+                        : "Publicar Nuevo Producto"}
                 </h3>
                 <button
                     class="modal-close"
                     type="button"
                     on:click={() => handleClose(true)}
-                    aria-label="Cerrar"
-                >&times;</button>
+                    aria-label="Cerrar">&times;</button
+                >
             </div>
             <div class="modal-body">
                 <ProductModal
@@ -266,7 +311,11 @@
     <div class="header">
         <h1>Inventario de Productos Farmacéuticos</h1>
         <div>
-             <button type="button" on:click={() => openModal(null)} class="btn btn-primary">
+            <button
+                type="button"
+                on:click={() => openModal(null)}
+                class="btn btn-primary"
+            >
                 + Agregar Producto Nuevo
             </button>
         </div>
@@ -274,37 +323,51 @@
 
     <div class="card mt-4 p-3">
         <h4>Carga Masiva de Productos</h4>
-        <p>Sube un archivo JSON o Excel. Las cabeceras del Excel deben coincidir con los campos de la plantilla.</p>
-        
+        <p>
+            Sube un archivo JSON o Excel. Las cabeceras del Excel deben
+            coincidir con los campos de la plantilla.
+        </p>
+
         <div class="btn-group mb-3">
             <button on:click={descargarPlantillaJSON} class="btn btn-secondary">
                 📥 Descargar Plantilla JSON
             </button>
-            <a href="/plantilla_productos.xlsx" download class="btn btn-success">
+            <a
+                href="/plantilla_productos.xlsx"
+                download
+                class="btn btn-success"
+            >
                 📥 Descargar Plantilla Excel
             </a>
         </div>
 
         <div class="input-group">
-            <input 
-                type="file" 
-                class="form-control" 
+            <input
+                type="file"
+                class="form-control"
                 id="file-upload"
                 accept=".json, .xlsx, .xls"
-                on:change={(e) => archivoSeleccionado = (e.target as HTMLInputElement).files[0]}
-            >
+                on:change={(e) =>
+                    (archivoSeleccionado = (e.target as HTMLInputElement)
+                        .files[0])}
+            />
             <button on:click={subirArchivo} class="btn btn-primary">
                 🚀 Cargar desde Archivo
             </button>
         </div>
-        
+
         {#if mensajeCargaMasiva}
-            <p class="mt-2" style="color: {mensajeCargaMasiva.startsWith('Error') ? 'red' : 'green'};">
+            <p
+                class="mt-2"
+                style="color: {mensajeCargaMasiva.startsWith('Error')
+                    ? 'red'
+                    : 'green'};"
+            >
                 {mensajeCargaMasiva}
             </p>
         {/if}
     </div>
-    
+
     <div class="filtros-card">
         <p class="filtros-titulo">Buscar y Filtrar Productos</p>
         <div class="controles-grid-productos">
@@ -339,7 +402,7 @@
         </p>
     {:else}
         <div class="tabla-wrapper">
-            <table class="tabla-usuarios"> 
+            <table class="tabla-usuarios">
                 <thead>
                     <tr>
                         <th style="width: 5%;">ID</th>
@@ -354,15 +417,20 @@
                     {#each productosPaginados as inv (inv.producto.idProducto)}
                         <tr>
                             <td>{inv.producto.idProducto}</td>
-                            <td class="product-name">{inv.producto.nombreProducto}</td>
+                            <td class="product-name"
+                                >{inv.producto.nombreProducto}</td
+                            >
                             <td class="product-desc">
-                                {inv.producto.principioActivo} - {inv.producto.presentacionComercial}
+                                {inv.producto.principioActivo} - {inv.producto
+                                    .presentacionComercial}
                             </td>
-                            <td>${inv.precio.toFixed(2)}</td>
+                            <td>{formatearCLP(inv.precio)}</td>
                             <td>
-                                <span class="badge" 
+                                <span
+                                    class="badge"
                                     class:stock-bajo={inv.stock <= 30}
-                                    class:stock-medio={inv.stock >= 31 && inv.stock <= 80}
+                                    class:stock-medio={inv.stock >= 31 &&
+                                        inv.stock <= 80}
                                     class:stock-alto={inv.stock > 80}
                                 >
                                     {inv.stock}
@@ -373,13 +441,14 @@
                                     on:click={() => handleEdit(inv)}
                                     class="btn btn-icon btn-edit"
                                 >
-                                    &#9998; 
+                                    &#9998;
                                 </button>
                                 <button
-                                    on:click={() => handleDelete(inv.producto.idProducto)}
+                                    on:click={() =>
+                                        handleDelete(inv.producto.idProducto)}
                                     class="btn btn-icon btn-delete"
                                 >
-                                    &times; 
+                                    &times;
                                 </button>
                             </td>
                         </tr>

@@ -26,13 +26,10 @@
         mensaje = "";
         error = "";
 
-        if (!nombreUsuario || !usuario || !password || !correo || !telefono) {
-            error = "Completa todos los campos obligatorios.";
-            return;
-        }
-
-        if (telefono.length !== 12) {
-            error = "El teléfono debe tener formato +569XXXXXXXX.";
+        const errorValidacion = validarFormulario();
+        if (errorValidacion) {
+            error = errorValidacion;
+            window.scrollTo({ top: 0, behavior: "smooth" });
             return;
         }
 
@@ -48,7 +45,6 @@
                 EstadoUsuario: "Inactivo",
             };
 
-            
             if (tipoUsuario === "Proveedor") {
                 body.NombreProveedor = nombreProveedor;
                 body.Rut = rut;
@@ -64,14 +60,25 @@
             });
 
             if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.mensaje || "Error al agregar usuario");
+                let mensajeError = "";
+
+                try {
+                    const data = await res.clone().json();
+                    mensajeError =
+                        data.mensaje || data.error || JSON.stringify(data);
+                } catch {
+                    mensajeError = await res.text(); 
+                }
+
+                error = mensajeError;
+
+                window.scrollTo({ top: 0, behavior: "smooth" });
+
+                throw new Error(mensajeError);
             }
 
             const data = await res.json();
             mensaje = `Usuario ${data.nombreUsuario} agregado correctamente.`;
-
-            // Limpiar campos
             nombreUsuario = "";
             usuario = "";
             password = "";
@@ -84,9 +91,96 @@
             direccionComercial = "";
             ciudad = "";
             tipoEstablecimiento = "";
+
+            window.scrollTo({ top: 0, behavior: "smooth" });
+
+            setTimeout(() => {
+                window.location.href = "#/admin";
+            }, 2000);
         } catch (e) {
             error = e.message;
         }
+    }
+
+    function formatearRut(valor) {
+        let limpio = valor.replace(/\./g, "").replace(/-/g, "");
+
+        if (limpio.length > 9) limpio = limpio.substring(0, 9);
+
+        if (limpio.length < 2) return limpio;
+
+        const cuerpo = limpio.slice(0, -1);
+        const dv = limpio.slice(-1);
+
+        const conPuntos = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // puntos cada 3 digitos
+
+        return conPuntos + "-" + dv.toUpperCase();
+    }
+
+    function validarDV(rutCompleto) {
+        rutCompleto = rutCompleto
+            .replace(/\./g, "")
+            .replace(/-/g, "")
+            .toUpperCase();
+        const cuerpo = rutCompleto.slice(0, -1);
+        let dv = rutCompleto.slice(-1);
+
+        let suma = 0;
+        let multiplo = 2;
+
+        // Recorrer RUT de derecha a izquierda
+        for (let i = cuerpo.length - 1; i >= 0; i--) {
+            suma += multiplo * parseInt(cuerpo[i]);
+            multiplo = multiplo < 7 ? multiplo + 1 : 2;
+        }
+
+        const dvEsperado = 11 - (suma % 11);
+
+        let dvFinal;
+        if (dvEsperado === 11) dvFinal = "0";
+        else if (dvEsperado === 10) dvFinal = "K";
+        else dvFinal = dvEsperado.toString();
+
+        return dvFinal === dv;
+    }
+
+    function validarFormulario() {
+        if (!nombreUsuario.trim())
+            return "El nombre completo no puede estar vacío.";
+
+        if (!usuario.trim()) return "El usuario (login) no puede estar vacío.";
+
+        if (!password.trim()) return "La contraseña no puede estar vacía.";
+
+        if (password.length < 6)
+            return "La contraseña debe tener al menos 6 caracteres.";
+
+        if (!correo.trim()) return "El correo no puede estar vacío.";
+
+        if (!tipoEstablecimiento.trim())
+            return "Debes ingresar un tipo de establecimiento.";
+
+        if (!telefono.trim()) return "Debes ingresar un teléfono.";
+
+        if (telefono.length !== 12 || !telefono.startsWith("+569"))
+            return "El teléfono debe tener formato +569XXXXXXXX.";
+
+        if (tipoUsuario === "Proveedor") {
+            if (!rut.trim()) return "El RUT es obligatorio para proveedores.";
+
+            // Largo mínimo y máximo (7.111.111-K a 99.999.999-K)
+            if (rut.length < 11 || rut.length > 12)
+                return "El RUT debe estar entre 11 y 12 caracteres incluyendo puntos y guion.";
+
+            // Validar formato
+            if (!/^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(rut))
+                return "El formato del RUT no es válido. Ejemplo correcto: 76.543.210-K";
+
+            // validar digito verificador
+            if (!validarDV(rut)) return "El RUT ingresado no es válido.";
+        }
+
+        return ""; // Todo OK
     }
 </script>
 
@@ -193,6 +287,7 @@
                     type="text"
                     class="form-control"
                     bind:value={rut}
+                    on:input={() => (rut = formatearRut(rut))}
                     placeholder="Ej: 76.543.210-K"
                 />
             </div>
@@ -229,7 +324,6 @@
         {/if}
 
         <hr />
-
 
         <button type="submit" class="btn btn-primary">Agregar Usuario</button>
     </form>
