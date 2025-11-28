@@ -11,9 +11,7 @@ namespace DrogueriaAPI.Models.DTOs
         public string Correo { get; set; }
         public string Telefono { get; set; }
         public string TipoEstablecimiento { get; set; }
-        public string Direccion1 { get; set; }
-        public string? Direccion2 { get; set; }
-        public string? Direccion3 { get; set; }
+
         public string EstadoUsuario { get; set; }
 
 

@@ -520,4 +520,5 @@ public class ProveedorProductoController : ControllerBase
 
         return Ok(resultado);
     }
+
 }
