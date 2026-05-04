@@ -18,10 +18,12 @@ namespace DrogueriaAPI.Controllers
     public class UsuarioController : ControllerBase
     {
         private readonly DrogueriaDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public UsuarioController(DrogueriaDbContext context)
+        public UsuarioController(DrogueriaDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
         //crear la clase para el request de login que sirve para recibir los datos del usuario
         public class LoginRequest
@@ -80,7 +82,9 @@ namespace DrogueriaAPI.Controllers
                 new Claim("idUsuario", usuario.IdUsuario.ToString()),
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("M7f!9vB2qR#s8WxZpL6eTjQ4uKdH1mNc"));
+            var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("Falta Jwt:Key en la configuración.");
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
