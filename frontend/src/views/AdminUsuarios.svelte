@@ -48,11 +48,8 @@
     // Función para formatear las fechas (solo YYYY-MM-DD)
     function formatearFecha(fecha) {
         if (!fecha) return "N/A";
-        try {
-            return fecha.substring(0, 10);
-        } catch (e) {
-            return fecha;
-        }
+        const [año, mes, dia] = fecha.split("T")[0].split("-");
+        return `${dia}-${mes}-${año}`;
     }
 
     //paginacion
