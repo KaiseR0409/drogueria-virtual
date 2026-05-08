@@ -24,7 +24,7 @@ namespace DrogueriaAPI.Models
         public string Familia { get; set; }
         public string Clase { get; set; }
         public string ViaAdministracion { get; set; }
-        public int RegistroISP { get; set; } // 1 o 0
+        public string RegistroISP { get; set; } // URL o nombre de archivo
         public DateTime? FechaVencimiento { get; set; }
         public required string CondicionesAlmacenamiento { get; set; }
         public string? ImagenUrl { get; set; }
