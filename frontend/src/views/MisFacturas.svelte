@@ -83,15 +83,11 @@
         }
     }
 
-    // Función para formatear fechas
-    function formatearFecha(fechaCompleta) {
-        if (!fechaCompleta) return "N/A";
-        try {
-            // Obtener solo la parte de la fecha
-            return fechaCompleta.substring(0, 10);
-        } catch (e) {
-            return "Fecha inválida";
-        }
+    // Función para formatear las fechas (solo DD-MM-AAAA)
+    function formatearFecha(fecha) {
+        if (!fecha) return "N/A";
+        const [año, mes, dia] = fecha.split("T")[0].split("-");
+        return `${dia}-${mes}-${año}`;
     }
 
     // Lógica de Filtro combinada y ordenamiento

@@ -105,9 +105,10 @@
         ordenSeleccionada = null;
     }
 
-    function formatearFecha(fechaCompleta) {
-        if (!fechaCompleta) return "N/A";
-        return fechaCompleta.substring(0, 10);
+    function formatearFecha(fecha) {
+        if (!fecha) return "N/A";
+        const [año, mes, dia] = fecha.split("T")[0].split("-");
+        return `${dia}-${mes}-${año}`;
     }
 
     // Lógica de Filtro combinada

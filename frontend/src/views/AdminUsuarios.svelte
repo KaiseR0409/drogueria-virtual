@@ -45,7 +45,7 @@
         }
     }
 
-    // Función para formatear las fechas (solo YYYY-MM-DD)
+    // Función para formatear las fechas (solo DD-MM-AAAA)
     function formatearFecha(fecha) {
         if (!fecha) return "N/A";
         const [año, mes, dia] = fecha.split("T")[0].split("-");
@@ -191,7 +191,7 @@
         usuarios = [...usuarios];
         try {
             await fetch(
-                `${API_URL}/api/Usuario/${datosAEnviar.idUsuario}`,
+                `${API_URL}/api/Usuario/${usuario.idUsuario}`,
                 {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
