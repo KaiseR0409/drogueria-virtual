@@ -1,8 +1,10 @@
 <script>
   import { onMount } from "svelte";
- import {login } from '../logic/auth.js';
- import { API_URL } from '../logic/api.js';
+  import {login } from '../logic/auth.js';
+  import { API_URL } from '../logic/api.js';
   let error = null;
+  let usuario = "";
+  let password = "";
 
   async function handleLogin() {
     error = null;
