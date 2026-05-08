@@ -90,7 +90,7 @@
                 familia: "Analgésicos",
                 clase: "Antipirético",
                 viaAdministracion: "Oral",
-                registroISP: 1,
+                registroISP: "1",
                 precio: 500000,
                 stock: 390,
             },

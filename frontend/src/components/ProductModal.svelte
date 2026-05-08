@@ -27,7 +27,7 @@
         familia: "",
         clase: "",
         viaAdministracion: "",
-        registroISP: 0,
+        registroISP: "0",
     });
 
     let submitting = $state(false);
@@ -56,7 +56,8 @@
                 familia: p.familia || "",
                 clase: p.clase || "",
                 viaAdministracion: p.viaAdministracion || "",
-                registroISP: p.registroISP || 0,
+                registroISP:
+                    p.registroISP != null ? String(p.registroISP) : "0",
             };
         }
     });
@@ -111,7 +112,7 @@
                 familia: formData.familia.trim(),
                 clase: formData.clase.trim(),
                 viaAdministracion: formData.viaAdministracion.trim(),
-                registroISP: Number(formData.registroISP),
+                registroISP: String(formData.registroISP).trim(),
             };
 
             let method, url;
@@ -203,10 +204,11 @@
                     <input type="text" bind:value={formData.viaAdministracion} placeholder="Ej: Oral, Tópica, Inyectable" />
                 </label>
                 <label>Registro ISP:
-                    <select bind:value={formData.registroISP}>
-                        <option value="1">Sí</option>
-                        <option value="0">No</option>
-                    </select>
+                    <input
+                        type="text"
+                        bind:value={formData.registroISP}
+                        placeholder="URL del archivo o código"
+                    />
                 </label>
             </div>
     </fieldset>
