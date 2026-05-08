@@ -28,7 +28,7 @@ public class ProductoPublicacionDto
     public string Familia { get; set; }
     public string Clase { get; set; }
     public string ViaAdministracion { get; set; }
-    public int RegistroISP { get; set; }
+    public string RegistroISP { get; set; }
 
     [Required]
     public string Marca { get; set; }
