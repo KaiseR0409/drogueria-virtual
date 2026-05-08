@@ -3,6 +3,7 @@
     import * as XLSX from "xlsx";
     import ProductModal from "../components/ProductModal.svelte";
     import { checkAuth } from "../logic/auth.js";
+    import { API_URL } from "../logic/api.js";
 
     checkAuth({ rolRequerido: "Proveedor" });
 
@@ -54,7 +55,7 @@
         }
 
         // Llamada a la API
-        fetch(`http://localhost:5029/api/proveedor/${idProveedor}/productos`)
+        fetch(`${API_URL}/api/proveedor/${idProveedor}/productos`)
             .then((res) => {
                 if (!res.ok) throw new Error(`Error al cargar: ${res.status}`);
                 return res.json();
@@ -127,7 +128,7 @@
                     throw new Error("Sesión de proveedor no válida.");
 
                 const response = await fetch(
-                    `http://localhost:5029/api/proveedor/${idProveedor}/carga-masiva`,
+                    `${API_URL}/api/proveedor/${idProveedor}/carga-masiva`,
                     {
                         method: "POST",
                         headers: {
@@ -215,7 +216,7 @@
             const token = localStorage.getItem("token"); // Se necesita token para borrar
             try {
                 const res = await fetch(
-                    `http://localhost:5029/api/proveedor/${idProveedor}/inventario/${idProducto}`,
+                    `${API_URL}/api/proveedor/${idProveedor}/inventario/${idProducto}`,
                     {
                         method: "DELETE",
                         headers: { Authorization: `Bearer ${token}` },

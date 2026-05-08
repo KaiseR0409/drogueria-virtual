@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import FacturaPreview from "../components/FacturaPreview.svelte";
     import { checkAuth } from "../logic/auth.js";
+    import { API_URL } from "../logic/api.js";
 
     checkAuth({ rolRequerido: "Proveedor" });
 
@@ -64,7 +65,7 @@
             error = null;
             // Endpoint de la API
             const res = await fetch(
-                `http://localhost:5029/api/Orden/mis-facturas/${idProveedor}`,
+                `${API_URL}/api/Orden/mis-facturas/${idProveedor}`,
             );
 
             if (!res.ok) {

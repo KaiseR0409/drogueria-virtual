@@ -4,6 +4,8 @@
     import ComprobanteCliente from "../components/ComprobanteCliente.svelte";
     import { cart, subtotal, totalItems } from "../logic/stores.js";
 
+    const API_URL = import.meta.env.VITE_API_URL;
+
     // Cálculo real del subtotal
     $: subtotalCL = $cart.reduce(
         (sum, item) => sum + Number(getItemPrice(item)),
@@ -56,7 +58,7 @@
         try {
             //endpoint que devuelve las direcciones del usuario
             const res = await fetch(
-                `http://localhost:5029/api/Direcciones/usuario/${idUsuario}`,
+                `${API_URL}/api/Direcciones/usuario/${idUsuario}`,
                 {
                     headers: {
                         "Content-Type": "application/json",
@@ -221,7 +223,7 @@
             };
 
             try {
-                const res = await fetch("http://localhost:5029/api/orden", {
+                const res = await fetch(`${API_URL}/api/orden`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -279,7 +281,7 @@
             mostrarComprobante = true;
 
             for (const orden of ordenesConfirmadas) {
-                const confirmPagoUrl = `http://localhost:5029/api/orden/${orden.idOrden}/confirmar-pago`;
+                const confirmPagoUrl = `${API_URL}/api/orden/${orden.idOrden}/confirmar-pago`;
 
                 const pagoRequest = {
                     NumeroFactura: orden.numeroFactura,

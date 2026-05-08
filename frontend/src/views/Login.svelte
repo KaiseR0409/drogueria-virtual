@@ -1,15 +1,13 @@
 <script>
   import { onMount } from "svelte";
  import {login } from '../logic/auth.js';
-
-  let usuario = '';
-  let password = '';
+ import { API_URL } from '../logic/api.js';
   let error = null;
 
   async function handleLogin() {
     error = null;
     try {
-      const res = await fetch("http://localhost:5029/api/Usuario/login", {
+      const res = await fetch(`${API_URL}/api/Usuario/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

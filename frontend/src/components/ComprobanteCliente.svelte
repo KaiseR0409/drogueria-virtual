@@ -1,6 +1,7 @@
 <script lang="ts">
     import jsPDF from "jspdf";
     import autoTable from "jspdf-autotable";
+    import { API_URL } from "../logic/api.js";
 
     export let ordenes = [];
 
@@ -11,7 +12,7 @@
         for (const orden of ordenes) {
             try {
                 const res = await fetch(
-                    `http://localhost:5029/api/Orden/detalle/${orden.idOrden}`,
+                    `${API_URL}/api/Orden/detalle/${orden.idOrden}`,
                 );
                 if (res.ok) {
                     completas.push(await res.json());

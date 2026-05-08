@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import SimilarProductCard from './SimilarProductCard.svelte';
     import { createEventDispatcher } from 'svelte';
+    import { API_URL } from '../logic/api.js';
 
     export let productoBase; 
     export let onAddToCart; 
@@ -33,7 +34,7 @@
                 return;
             }
             
-            const apiUrl = `http://localhost:5029/api/proveedor/BuscarSimilares?${params.toString()}`;
+            const apiUrl = `${API_URL}/api/proveedor/BuscarSimilares?${params.toString()}`;
 
             const res = await fetch(apiUrl);
             if (!res.ok) {

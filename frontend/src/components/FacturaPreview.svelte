@@ -2,6 +2,7 @@
   import jsPDF from "jspdf";
   import html2canvas from "html2canvas";
 
+  import { API_URL } from "../logic/api.js";
   export let factura;
   let cargando = false;
 
@@ -12,7 +13,7 @@
     try {
       // Traer detalles completos si faltan
       if (!factura.items || !factura.proveedor?.direccionComercial) {
-        const res = await fetch(`http://localhost:5029/api/Orden/${factura.idOrden}`);
+        const res = await fetch(`${API_URL}/api/Orden/${factura.idOrden}`);
         if (res.ok) facturaCompleta = await res.json();
       }
 

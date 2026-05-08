@@ -1,5 +1,6 @@
 <script>
     import { onMount } from "svelte";
+    import { API_URL } from "../logic/api.js";
 
     // recibir props (Svelte 5 runas)
     let { product, close, sucess } = $props();
@@ -118,12 +119,12 @@
                 // MODO EDICIÓN
                 const idProducto = product.idProducto;
                 method = "PUT";
-                url = `http://localhost:5029/api/proveedor/${idProveedor}/producto/${idProducto}`;
+                url = `${API_URL}/api/proveedor/${idProveedor}/producto/${idProducto}`;
                 body.idProducto = idProducto;
             } else {
                 // MODO CREACIÓN
                 method = "POST";
-                url = `http://localhost:5029/api/proveedor/${idProveedor}/producto`;
+                url = `${API_URL}/api/proveedor/${idProveedor}/producto`;
             }
 
             const res = await fetch(url, {

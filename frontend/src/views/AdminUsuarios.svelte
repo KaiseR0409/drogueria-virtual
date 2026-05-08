@@ -1,6 +1,7 @@
 <script>
     import { onMount } from "svelte";
     import { checkAuth } from "../logic/auth.js";
+    import { API_URL } from "../logic/api.js";
     checkAuth({ rolRequerido: "Administrador" });
 
     let usuarios = [];
@@ -27,7 +28,7 @@
     async function cargarUsuarios() {
         try {
             cargando = true;
-            const res = await fetch("http://localhost:5029/api/Usuario");
+            const res = await fetch(`${API_URL}/api/Usuario`);
             if (!res.ok) throw new Error("Error al obtener usuarios");
 
             let lista = await res.json();
@@ -153,7 +154,7 @@
             datosAEnviar.fechaActualizacion = new Date().toISOString();
 
             const res = await fetch(
-                `http://localhost:5029/api/Usuario/${datosAEnviar.idUsuario}`,
+                `${API_URL}/api/Usuario/${datosAEnviar.idUsuario}`,
                 {
                     method: "PUT",
                     headers: {
@@ -193,7 +194,7 @@
         usuarios = [...usuarios];
         try {
             await fetch(
-                `http://localhost:5029/api/Usuario/${usuario.idUsuario}`,
+                `${API_URL}/api/Usuario/${datosAEnviar.idUsuario}`,
                 {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
@@ -209,7 +210,7 @@
     async function obtenerDirecciones(idUsuario) {
         try {
             const res = await fetch(
-                `http://localhost:5029/api/Direcciones/usuario/${idUsuario}`,
+                `${API_URL}/api/Direcciones/usuario/${idUsuario}`,
             );
             if (!res.ok) throw new Error("Error al obtener direcciones");
             return await res.json();

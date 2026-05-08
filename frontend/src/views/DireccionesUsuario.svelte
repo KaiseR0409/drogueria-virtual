@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { API_URL } from "../logic/api.js";
 
   let direcciones = [];
   let filtro = "";
@@ -24,7 +25,7 @@
     cargando = true;
     try {
       const res = await fetch(
-        `http://localhost:5029/api/Direcciones/usuario/${idUsuario}`,
+        `${API_URL}/api/Direcciones/usuario/${idUsuario}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -79,8 +80,8 @@
       return;
     }
     const url = esNueva
-      ? `http://localhost:5029/api/Direcciones/usuario/${idUsuario}`
-      : `http://localhost:5029/api/Direcciones/${direccionEditando.idDireccion}`;
+      ? `${API_URL}/api/Direcciones/usuario/${idUsuario}`
+      : `${API_URL}/api/Direcciones/${direccionEditando.idDireccion}`;
     const method = esNueva ? "POST" : "PUT";
 
     await fetch(url, {
@@ -97,7 +98,7 @@
 
   async function eliminarDireccion(id) {
     if (!confirm("¿Eliminar esta dirección?")) return;
-    await fetch(`http://localhost:5029/api/Direcciones/${id}`, {
+    await fetch(`${API_URL}/api/Direcciones/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -105,7 +106,7 @@
   }
 
   async function marcarPrincipal(id) {
-    await fetch(`http://localhost:5029/api/Direcciones/${id}/principal`, {
+    await fetch(`${API_URL}/api/Direcciones/${id}/principal`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` },
     });

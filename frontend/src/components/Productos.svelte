@@ -3,6 +3,7 @@
     import { onMount } from "svelte";
     import { cart, filters } from "../logic/stores.js"; 
     import { fetchWithRetry } from "../logic/fetchWithRetry.js";
+    import { API_URL } from "../logic/api.js";
 
     let products = [];
     let errMessage = "";
@@ -39,7 +40,7 @@
         try {
             cargando = true;
             fin = false;
-            let apiUrl = `http://localhost:5029/api/ProveedorProducto/InventarioCompletoConFiltros`;
+            let apiUrl = `${API_URL}/api/ProveedorProducto/InventarioCompletoConFiltros`;
             const params = new URLSearchParams();
             
             $filters.laboratoriosSeleccionados.forEach((lab) =>

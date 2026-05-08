@@ -1,5 +1,6 @@
 <script>
     import { checkAuth } from "../logic/auth.js";
+    import { API_URL } from "../logic/api.js";
     checkAuth({ rolRequerido: "Administrador" });
 
     let nombreUsuario = "";
@@ -53,7 +54,7 @@
                 body.Ciudad = ciudad;
             }
 
-            const res = await fetch("http://localhost:5029/api/Usuario", {
+            const res = await fetch(`${API_URL}/api/Usuario`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),

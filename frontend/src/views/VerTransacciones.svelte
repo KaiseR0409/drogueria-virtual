@@ -2,6 +2,7 @@
     import Comprobante from "../components/Comprobante.svelte";
     import { onMount } from "svelte";
     import { checkAuth } from "../logic/auth.js";
+    import { API_URL } from "../logic/api.js";
     checkAuth();
 
     let historial = [];
@@ -57,7 +58,7 @@
             cargando = true;
             error = null;
             const res = await fetch(
-                `http://localhost:5029/api/Orden/mi-historial/${idUsuario}`,
+                `${API_URL}/api/Orden/mi-historial/${idUsuario}`,
             );
 
             if (!res.ok) {
@@ -82,7 +83,7 @@
         const token = localStorage.getItem("token");
         try {
             const res = await fetch(
-                `http://localhost:5029/api/Orden/${idOrden}`,
+                `${API_URL}/api/Orden/${idOrden}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 },

@@ -1,6 +1,7 @@
 <script>
   import { filters } from '../logic/stores.js';
   import { onMount } from 'svelte';
+  import { API_URL } from '../logic/api.js';
 
   let allLaboratorios = [];
   let displayedLaboratorios = [];
@@ -9,14 +10,14 @@
 
     // Llamada al endpoint para obtener la lista de laboratorios
     onMount(async () => {
-        const res = await fetch('http://localhost:5029/api/Productos/Laboratorios');
+        const res = await fetch(`${API_URL}/api/Productos/Laboratorios`);
         if (res.ok) {
             allLaboratorios = await res.json();
             displayedLaboratorios = allLaboratorios;
         }
          // Proveedores
         try {
-          const resProv = await fetch('http://localhost:5029/api/Proveedores/Listado');
+          const resProv = await fetch(`${API_URL}/api/Proveedores/Listado`);
           if (resProv.ok) {
             allProveedores = await resProv.json();
             displayedProveedores = allProveedores;
